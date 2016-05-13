@@ -5,6 +5,32 @@
 ngl::Vec3 Grid::RK2_integrator(ngl::Vec3 _u, ngl::Vec3 _du, float _dt)
 {
   ngl::Vec3 result;
+
+  ///Option 1:
+  /// Think this is actually midpoint rule/modified Euler
+//  //k1=h*f(xn,yn)
+//  ngl::Vec3 k1=_du;
+
+//  //k2=h*f(xn+h/2,yn+k1/2)
+//  ngl::Vec3 k2=_du+(_dt/2.0)*k1;
+
+//  //yn+1=yn+k2
+//  result=_u+(_dt*k2);
+
+
+  ///Option 2:
+  /// Not sure if different. Think the first one is midpoint rule/modified Euler, and the one below is actually RK2
+
+  //k1=f(tn,un)
+  ngl::Vec3 k1=_du;
+
+  //k2=f(tn+h,un+hk1)
+  ngl::Vec3 k2=_du+(_dt*k1);
+
+  //un+1=un+h/2*(k1+k2)
+  result=_u+((_dt/2)*(k1+k2));
+
+
   return result;
 
 }
@@ -137,4 +163,22 @@ float Grid::trilinearInterpFloat(std::vector<float> *_function, int _index0_X, i
 void Grid::linearSystemSolve(std::vector<float> *result, std::vector<float> *_A, std::vector<float> *_b)
 {
 
+}
+
+ngl::Vec3 Grid::calcDivergenceVec3(std::string _fieldType, int _index_X, int _index_Y, int _index_Z)
+{
+  ngl::Vec3 result;
+
+  if (_fieldType=="velocity")
+  {
+    ngl::Vec3 difference_X=m_listCells.at(getVectorIndex((_index_X+1), _index_Y, _index_Z))-m_listCells.at(getVectorIndex((_index_X-1), _index_Y, _index_Z));
+    ngl::Vec3 difference_Y=m_listCells.at(getVectorIndex(_index_X, (_index_Y+1), _index_Z))-m_listCells.at(getVectorIndex(_index_X, (_index_Y-1), _index_Z));
+    ngl::Vec3 difference_Z=m_listCells.at(getVectorIndex(_index_X+1, _index_Y, (_index_Z+1)))-m_listCells.at(getVectorIndex(_index_X, _index_Y, (_index_Z-1)));
+
+    float constant=0.5/m_cellSize;
+
+    result=constant*(difference_X + difference_Y + difference_Z);
+  }
+
+  return result;
 }

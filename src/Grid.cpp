@@ -274,19 +274,15 @@ void Grid::addForce(float _dt)
       m_listCells.at(i)->m_newVelocity=m_listCells.at(i)->m_oldVelocity+(m_listCells.at(i)->m_externalForce*_dt);
     }
   }
+
+  setBoundaryValuesVec3("velocity");
+  setBoundaryVelocity();
+
 }
 
 
 void Grid::advect(float _dt)
 {
-
-  //Need to save w1 temporarily
-  ///Not entirely sure if this is needed
-  for (int i=0; i<pow(m_noCells,3); i++)
-  {
-    m_listCells.at(i)->m_tempStoreVec3=m_listCells.at(i)->m_newVelocity;
-  }
-
   //Need to loop over 3D space i,j,k
   for (int k=0; k<m_noCells; k++)
   {
@@ -313,11 +309,21 @@ void Grid::advect(float _dt)
         //Is cell inside boundaries? If not find nearest boundary cell and use that value for advection.
         ngl::Vec3 advectVelocity=getVelocityFromField(prevPosition);
 
-        m_listCells.at(index)->m_newVelocity=advectVelocity;
+        //Need to store new values temporarily so don't interfer with the w1 we're collecting values from
+        m_listCells.at(index)->m_tempStoreVec3=advectVelocity;
 
       }
     }
   }
+
+  //When all advection velocities calculated, set the temporarily stored field to the newVelocity field.
+  for (int i=0; i<pow(m_noCells,3); i++)
+  {
+    m_listCells.at(i)->m_newVelocity=m_listCells.at(i)->m_tempStoreVec3;
+  }
+
+  setBoundaryValuesVec3("velocity");
+  setBoundaryVelocity();
 
 }
 
@@ -329,10 +335,38 @@ void Grid::diffuse(float _dt)
 void Grid::project(float _dt)
 {
 
-}
+//  int sizeOfVectors=(int)(pow((m_noCells-2),3));
+//  std::vector<ngl::Vec3> b[sizeOfVectors];
+//  std::vector<float> p[sizeOfVectors];
+//  std::vector<float> A[1];
+  //May be worth checking if boundary cell since don't have to calculate for these
 
-void Grid::traceParticle(ngl::Vec3 _newPosition, ngl::Vec3 oldPosition, float _dt)
-{
+  for (int k=1; k<(m_noCells-1); k++)
+  {
+    for (int j=1; j<(m_noCells-1); j++)
+    {
+      for (int i=1; i<(m_noCells-1); i++)
+      {
+
+        //Set up b=div(w3)
+
+
+
+
+
+      }
+    }
+  }
+  //Set up b
+
+  //Set up A
+
+  //Send to linear solver to find p
+
+  //Calulate div(p)
+
+  //Calculate new velocity w4=w3-div(p)
+
 
 }
 
@@ -340,9 +374,7 @@ void Grid::traceParticle(ngl::Vec3 _newPosition, ngl::Vec3 oldPosition, float _d
 ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)
 {
 
-  ///To do: Check that particle position is inside the boundaries.
-  ///         If not need to find closest boundary cell
-  ///       Also need to set such that can choose which field to take interpolation from
+  ///To do: Choose field to take interpolation from?
 
   ngl::Vec3 fieldVelocity;
 
@@ -357,33 +389,81 @@ ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)
   index0_Y=trunc(indexParticle.m_y);
   index0_Z=trunc(indexParticle.m_z);
 
-  //Find the index of the nearest neighbour cell in i,j,k directions
-  int index1_X=index0_X-1;
-  int index1_Y=index0_Y-1;
-  int index1_Z=index0_Z-1;
 
-  if ((indexParticle.m_x-index0_X)>=0.5)
+  //Check if particle inside boundaries
+  if (index0_X>0 && index0_X<(m_noCells-1) && index0_Y>0 && index0_Y<(m_noCells-1) && index0_Z>0 && index0_Z<(m_noCells-1))
   {
-    index1_X=index0_X+1;
-  }
-  if ((indexParticle.m_y-index0_Y)>=0.5)
-  {
-    index1_Y=index0_Y+1;
-  }
-  if ((indexParticle.m_z-index0_Z)>=0.5)
-  {
-    index1_Z=index0_Z+1;
+    //Find the index of the nearest neighbour cell in i,j,k directions
+    int index1_X=index0_X-1;
+    int index1_Y=index0_Y-1;
+    int index1_Z=index0_Z-1;
+
+    if ((indexParticle.m_x-index0_X)>=0.5)
+    {
+      index1_X=index0_X+1;
+    }
+    if ((indexParticle.m_y-index0_Y)>=0.5)
+    {
+      index1_Y=index0_Y+1;
+    }
+    if ((indexParticle.m_z-index0_Z)>=0.5)
+    {
+      index1_Z=index0_Z+1;
+    }
+
+    //  //Test routine for finding indices
+    //  std::cout<<"Position particle: ["<<_particlePosition.m_x<<","<<_particlePosition.m_y<<","<<_particlePosition.m_z<<"]\n";
+    //  std::cout<<"Index particle: ["<<indexParticle.m_x<<","<<indexParticle.m_y<<","<<indexParticle.m_z<<"]\n";
+    //  std::cout<<"Index in Cell: ["<<index0_X<<","<<index0_Y<<","<<index0_Z<<"]\n";
+    //  std::cout<<"Index neigbour cell: ["<<index1_X<<","<<index1_Y<<","<<index1_Z<<"]\n";
+
+    //Use trilinear interpolation to get field velocity based on position
+  //  fieldVelocity=trilinearInterpVec3(&m_newVelocityField, index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
+    fieldVelocity=trilinearInterpVec3("velocity", index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
   }
 
-  //Test routine for finding indices
-  std::cout<<"Position particle: ["<<_particlePosition.m_x<<","<<_particlePosition.m_y<<","<<_particlePosition.m_z<<"]\n";
-  std::cout<<"Index particle: ["<<indexParticle.m_x<<","<<indexParticle.m_y<<","<<indexParticle.m_z<<"]\n";
-  std::cout<<"Index in Cell: ["<<index0_X<<","<<index0_Y<<","<<index0_Z<<"]\n";
-  std::cout<<"Index neigbour cell: ["<<index1_X<<","<<index1_Y<<","<<index1_Z<<"]\n";
+  //If either in boundary cell or outside bounding box
+  else
+  {
+    //If outside bounding box by i,j or k being smaller than 0 or greater than m_noCells-1, set them to 0 or m_noCells-1.
+    //If inside boundary cell then will not change indices and instead just find velocity inside this cell.
 
-  //Use trilinear interpolation to get field velocity based on position
-//  fieldVelocity=trilinearInterpVec3(&m_newVelocityField, index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
-  fieldVelocity=trilinearInterpVec3("velocity", index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
+    //If index0_X<0 set it to 0
+    if (index0_X<0)
+    {
+      index0_X=0;
+    }
+    //If index0_X>m_noCells-1, set it to m_noCells-1
+    if (index0_X>(m_noCells-1))
+    {
+      index0_X=(m_noCells-1);
+    }
+    //Do same for Y and Z
+    if (index0_Y<0)
+    {
+      index0_Y=0;
+    }
+    if (index0_Y>(m_noCells-1))
+    {
+      index0_Y=(m_noCells-1);
+    }
+
+    if (index0_Z<0)
+    {
+      index0_Z=0;
+    }
+    //If index0_X>m_noCells-1, set it to m_noCells-1
+    if (index0_Z>(m_noCells-1))
+    {
+      index0_Z=(m_noCells-1);
+    }
+
+
+    //Find velocity at new index
+    fieldVelocity=m_listCells.at(getVectorIndex(index0_X,index0_Y,index0_Z))->m_newVelocity;
+
+  }
+
 
   //Return velocity
   return fieldVelocity;
