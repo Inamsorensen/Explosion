@@ -15,12 +15,17 @@ Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells)
 
   m_cellSize=m_gridSize/m_noCells;
 
+  m_ambientTemp=293.0;
+
   //Set up zero fields for velocity, pressure and force
   for (int i=0; i<pow(m_noCells,3); i++)
   {
     m_oldVelocityField.push_back(ngl::Vec3(0.0,0.0,0.0));
     m_pressureField.push_back(0.0);
     m_forceField.push_back(ngl::Vec3(0.0,0.0,0.0));
+
+    //Set ambient temperature everywhere
+    m_oldTemperatureField.push_back(m_ambientTemp);
 
     //Set space for store fields
     m_storeFieldVec3.push_back(ngl::Vec3(0.0,0.0,0.0));
@@ -29,13 +34,10 @@ Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells)
     //Set space for storeB and storeA. They only contain values for cells that aren't solid. A=[(m_noCells-2)^3,(m_noCells-2)^3]
     m_storeB.push_back(0.0);
 
-    for (int j=0; j<pow(m_noCells,3); j++)
-    {
-      m_storeA.push_back(0.0);
-    }
   }
-  m_newVelocityField=m_oldVelocityField;
 
+  m_newVelocityField=m_oldVelocityField;
+  m_newTemperatureField=m_oldTemperatureField;
 
   ///Need to set boundary values if change from zero
 
@@ -82,9 +84,20 @@ void Grid::setPressureField(std::vector<float> _pressureField)
   setBoundaryValuesFloat(&m_pressureField);
 }
 
+void Grid::setTemperatureField(std::vector<float> _temperatureField)
+{
+  m_newTemperatureField=_temperatureField;
+  setBoundaryTemperature();
+}
+
 void Grid::update(float _dt)
 {
+  //Set old velocity field equal to new velocity field so new velocity field can be given new values. Do same for temperature field
+  swap();
+
   updateVelocityField(_dt);
+
+  updateTemperatureField(_dt);
 
 }
 
@@ -144,25 +157,41 @@ void Grid::setBoundaryVelocity()
   }
 }
 
-
+void Grid::setBoundaryTemperature()
+{
+  for (int i=0; i<m_noCells; i++)
+  {
+    for (int j=0; j<m_noCells; j++)
+    {
+      m_newTemperatureField.at(getVectorIndex(0,i,j))=m_ambientTemp;
+      m_newTemperatureField.at(getVectorIndex(m_noCells-1,i,j))=m_ambientTemp;
+      m_newTemperatureField.at(getVectorIndex(i,0,j))=m_ambientTemp;
+      m_newTemperatureField.at(getVectorIndex(i,m_noCells-1,j))=m_ambientTemp;
+      m_newTemperatureField.at(getVectorIndex(i,j,0))=m_ambientTemp;
+      m_newTemperatureField.at(getVectorIndex(i,j,m_noCells-1))=m_ambientTemp;
+    }
+  }
+}
 
 
 void Grid::swap()
 {
   m_oldVelocityField=m_newVelocityField;
+
+  m_oldTemperatureField=m_newTemperatureField;
 }
 
 
 void Grid::updateVelocityField(float _dt)
 {
-  //Set old velocity field equal to new velocity field so new velocity field can be given new values
-  swap();
-
   //Add external forces. w1=w0+dt*f
   addForce(_dt);
 
+  ///Code has another project in it. Not sure why but makes the result better?
+//  project();
+
   //Advect. w2=w1(p(x,-dt))
-  advect(_dt);
+  advectVelocity(_dt);
 
   //Diffuse (I-vdtD2)w3=w2
 
@@ -185,7 +214,7 @@ void Grid::addForce(float _dt)
 
 
 
-void Grid::advect(float _dt)
+void Grid::advectVelocity(float _dt)
 {
   //Need to loop over 3D space i,j,k
   for (int k=0; k<m_noCells; k++)
@@ -298,7 +327,63 @@ void Grid::project()
 
 }
 
+void Grid::updateTemperatureField(float _dt)
+{
+  //Advect temperature
+  advectTemperature(_dt);
 
+  //Diffuse
+
+  //Set boundaries
+  setBoundaryTemperature();
+
+  //Cool particles
+
+
+}
+
+void Grid::advectTemperature(float _dt)
+{
+  ///To do:
+  /// Set boundary temperature to ambient
+
+  //Need to loop over 3D space i,j,k
+  for (int k=0; k<m_noCells; k++)
+  {
+    for (int j=0; j<m_noCells; j++)
+    {
+      for (int i=0; i<m_noCells; i++)
+      {
+        //Find previous position for fictive particle at (i,j,k)
+        //Get old_velocity at (i,j,k)
+        int index=getVectorIndex(i,j,k);
+
+        ngl::Vec3 oldVelocity=m_oldVelocityField.at(index);
+
+        //Get actual position for (i,j,k)
+        ngl::Vec3 currPosition;
+        currPosition.m_x=(i+0.5)*m_cellSize+m_origin.m_x;
+        currPosition.m_y=(j+0.5)*m_cellSize+m_origin.m_y;
+        currPosition.m_z=(k+0.5)*m_cellSize+m_origin.m_z;
+
+        //Use these values in RK2 to find x0
+        ngl::Vec3 prevPosition=RK2_integrator(currPosition,oldVelocity,(-1)*_dt);
+
+        //Determine the cell that is in
+        //Is cell inside boundaries? If not find nearest boundary cell and use that value for advection.
+        float advectTemperature=getTemperatureFromField(prevPosition);
+
+        //Need to store new values temporarily so don't interfer with the w1 we're collecting values from
+        m_storeFieldFloat.at(index)=advectTemperature;
+
+      }
+    }
+  }
+
+  //When all advection velocities calculated, set the temporarily stored field to the newVelocity field.
+  m_newTemperatureField=m_storeFieldFloat;
+
+}
 
 ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)
 {
@@ -395,4 +480,101 @@ ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)
 
   //Return velocity
   return fieldVelocity;
+}
+
+float Grid::getTemperatureFromField(ngl::Vec3 _particlePosition)
+{
+
+  ///To do: Choose field to take interpolation from?
+
+  float fieldTemperature;
+
+  //Find grid indices from particle position.
+  ngl::Vec3 indexParticle=(1/m_cellSize)*(_particlePosition-m_origin);
+
+  //Find which cell the particle is in and set this to index0. Are there any issues with using round?
+  int index0_X;
+  int index0_Y;
+  int index0_Z;
+  index0_X=trunc(indexParticle.m_x);
+  index0_Y=trunc(indexParticle.m_y);
+  index0_Z=trunc(indexParticle.m_z);
+
+
+  //Check if particle inside boundaries
+  if (index0_X>0 && index0_X<(m_noCells-1) && index0_Y>0 && index0_Y<(m_noCells-1) && index0_Z>0 && index0_Z<(m_noCells-1))
+  {
+    //Find the index of the nearest neighbour cell in i,j,k directions
+    int index1_X=index0_X-1;
+    int index1_Y=index0_Y-1;
+    int index1_Z=index0_Z-1;
+
+    if ((indexParticle.m_x-index0_X)>=0.5)
+    {
+      index1_X=index0_X+1;
+    }
+    if ((indexParticle.m_y-index0_Y)>=0.5)
+    {
+      index1_Y=index0_Y+1;
+    }
+    if ((indexParticle.m_z-index0_Z)>=0.5)
+    {
+      index1_Z=index0_Z+1;
+    }
+
+    //  //Test routine for finding indices
+    //  std::cout<<"Position particle: ["<<_particlePosition.m_x<<","<<_particlePosition.m_y<<","<<_particlePosition.m_z<<"]\n";
+    //  std::cout<<"Index particle: ["<<indexParticle.m_x<<","<<indexParticle.m_y<<","<<indexParticle.m_z<<"]\n";
+    //  std::cout<<"Index in Cell: ["<<index0_X<<","<<index0_Y<<","<<index0_Z<<"]\n";
+    //  std::cout<<"Index neigbour cell: ["<<index1_X<<","<<index1_Y<<","<<index1_Z<<"]\n";
+
+    //Use trilinear interpolation to get field velocity based on position
+    fieldTemperature=trilinearInterpFloat(&m_newTemperatureField, index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
+  }
+
+  //If either in boundary cell or outside bounding box
+  else
+  {
+    //If outside bounding box by i,j or k being smaller than 0 or greater than m_noCells-1, set them to 0 or m_noCells-1.
+    //If inside boundary cell then will not change indices and instead just find velocity inside this cell.
+
+    //If index0_X<0 set it to 0
+    if (index0_X<0)
+    {
+      index0_X=0;
+    }
+    //If index0_X>m_noCells-1, set it to m_noCells-1
+    if (index0_X>(m_noCells-1))
+    {
+      index0_X=(m_noCells-1);
+    }
+    //Do same for Y and Z
+    if (index0_Y<0)
+    {
+      index0_Y=0;
+    }
+    if (index0_Y>(m_noCells-1))
+    {
+      index0_Y=(m_noCells-1);
+    }
+
+    if (index0_Z<0)
+    {
+      index0_Z=0;
+    }
+    //If index0_X>m_noCells-1, set it to m_noCells-1
+    if (index0_Z>(m_noCells-1))
+    {
+      index0_Z=(m_noCells-1);
+    }
+
+
+    //Find velocity at new index
+    fieldTemperature=m_newTemperatureField.at(getVectorIndex(index0_X,index0_Y,index0_Z));
+
+  }
+
+
+  //Return velocity
+  return fieldTemperature;
 }

@@ -245,3 +245,28 @@ ngl::Vec3 Grid::calcDivergenceFloat(std::vector<float> *_field, int _index_X, in
   return result;
 
 }
+
+ngl::Vec3 Grid::calcCurl(std::vector<ngl::Vec3> *_field, int _index_X, int _index_Y, int _index_Z)
+{
+  ngl::Vec3 result;
+
+  ngl::Vec3 field_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z));
+  ngl::Vec3 field_i0jk=_field->at(getVectorIndex((_index_X-1), _index_Y, _index_Z));
+  ngl::Vec3 field_ij1k=_field->at(getVectorIndex(_index_X, (_index_Y+1), _index_Z));
+  ngl::Vec3 field_ij0k=_field->at(getVectorIndex(_index_X, (_index_Y-1), _index_Z));
+  ngl::Vec3 field_ijk1=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z+1)));
+  ngl::Vec3 field_ijk0=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z-1)));
+
+  float dfxdy=(0.5/m_cellSize)*(field_ij1k.m_x-field_ij0k.m_x);
+  float dfxdz=(0.5/m_cellSize)*(field_ijk1.m_x-field_ijk0.m_x);
+  float dfydx=(0.5/m_cellSize)*(field_i1jk.m_y-field_i0jk.m_y);
+  float dfydz=(0.5/m_cellSize)*(field_ijk1.m_y-field_ijk0.m_y);
+  float dfzdx=(0.5/m_cellSize)*(field_i1jk.m_z-field_i0jk.m_z);
+  float dfzdy=(0.5/m_cellSize)*(field_ij1k.m_z-field_ij0k.m_z);
+
+  result.m_x=(dfzdy-dfydz);
+  result.m_y=(dfxdz-dfzdx);
+  result.m_z=(dfydx-dfxdy);
+
+  return result;
+}
