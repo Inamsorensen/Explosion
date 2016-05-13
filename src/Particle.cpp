@@ -27,16 +27,15 @@ Particle::Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float 
   Grid* grid=Grid::getGrid();
   ngl::Vec3 gridOrigin=grid->getPosition();
   float gridSize=grid->getGridSize();
-  float cellSize=grid->getCellSize();
 
   //Make sure particles cannot move into the outer cells in the grid.
   ///Could optionally not let the trilinear interpolation sample from cells that do not exist.
-  m_xMin=gridOrigin.m_x+cellSize;
-  m_yMin=gridOrigin.m_y+cellSize;
-  m_zMin=gridOrigin.m_z+cellSize;
-  m_xMax=gridOrigin.m_x+gridSize-cellSize;
-  m_yMax=gridOrigin.m_y+gridSize-cellSize;
-  m_zMax=gridOrigin.m_z+gridSize-cellSize;
+  m_xMin=gridOrigin.m_x;
+  m_yMin=gridOrigin.m_y;
+  m_zMin=gridOrigin.m_z;
+  m_xMax=gridOrigin.m_x+gridSize;
+  m_yMax=gridOrigin.m_y+gridSize;
+  m_zMax=gridOrigin.m_z+gridSize;
 
 }
 

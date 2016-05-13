@@ -15,56 +15,27 @@ Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells)
 
   m_cellSize=m_gridSize/m_noCells;
 
-//  //Set up zero fields for velocity, pressure and force
-//  for (int i=0; i<pow(m_noCells,3); i++)
-//  {
-//    m_oldVelocityField.push_back(ngl::Vec3(0.0,0.0,0.0));
-//    m_pressureField.push_back(0.0);
-//    m_forceField.push_back(ngl::Vec3(0.0,0.0,0.0));
-
-//    //Set all cells to not be boundary cells
-//    m_solidBoundary.push_back(false);
-//  }
-//  m_newVelocityField=m_oldVelocityField;
-
-//  //Set solid boundary cells
-//  for (int i=0; i<m_noCells; i++)
-//  {
-//    for (int j=0; j<m_noCells; j++)
-//    {
-//      m_solidBoundary.at(getVectorIndex(0,i,j))=true;
-//      m_solidBoundary.at(getVectorIndex(m_noCells-1,i,j))=true;
-//      m_solidBoundary.at(getVectorIndex(i,0,j))=true;
-//      m_solidBoundary.at(getVectorIndex(i,m_noCells-1,j))=true;
-//      m_solidBoundary.at(getVectorIndex(i,j,0))=true;
-//      m_solidBoundary.at(getVectorIndex(i,j,m_noCells-1))=true;
-//    }
-//  }
-
-  //Create cells and set zero fields for velocity, pressure and force. Also set all cells to fluid cells
+  //Set up zero fields for velocity, pressure and force
   for (int i=0; i<pow(m_noCells,3); i++)
   {
-    Cell* newCell=new Cell;
-    newCell->m_isSolid=false;
-    newCell->m_oldVelocity=ngl::Vec3(0.0,0.0,0.0);
-    newCell->m_newVelocity=newCell->m_oldVelocity;
-    newCell->m_externalForce=ngl::Vec3(0.0,0.0,0.0);
-    newCell->m_pressure=0.0;
-    m_listCells.push_back(newCell);
-  }
-  //Set solid boundary cells
-  for (int i=0; i<m_noCells; i++)
-  {
-    for (int j=0; j<m_noCells; j++)
+    m_oldVelocityField.push_back(ngl::Vec3(0.0,0.0,0.0));
+    m_pressureField.push_back(0.0);
+    m_forceField.push_back(ngl::Vec3(0.0,0.0,0.0));
+
+    //Set space for store fields
+    m_storeFieldVec3.push_back(ngl::Vec3(0.0,0.0,0.0));
+    m_storeFieldFloat.push_back(0.0);
+
+    //Set space for storeB and storeA. They only contain values for cells that aren't solid. A=[(m_noCells-2)^3,(m_noCells-2)^3]
+    m_storeB.push_back(0.0);
+
+    for (int j=0; j<pow(m_noCells,3); j++)
     {
-      m_listCells.at(getVectorIndex(0,i,j))->m_isSolid=true;
-      m_listCells.at(getVectorIndex(m_noCells-1,i,j))->m_isSolid=true;
-      m_listCells.at(getVectorIndex(i,0,j))->m_isSolid=true;
-      m_listCells.at(getVectorIndex(i,m_noCells-1,j))->m_isSolid=true;
-      m_listCells.at(getVectorIndex(i,j,0))->m_isSolid=true;
-      m_listCells.at(getVectorIndex(i,j,m_noCells-1))->m_isSolid=true;
+      m_storeA.push_back(0.0);
     }
   }
+  m_newVelocityField=m_oldVelocityField;
+
 
   ///Need to set boundary values if change from zero
 
@@ -94,42 +65,21 @@ Grid* Grid::getGrid()
 
 void Grid::setVelocityField(std::vector<ngl::Vec3> _velocityField)
 {
-//  m_newVelocityField=_velocityField;
-//  setBoundaryValuesVec3(&m_newVelocityField);
-//  setBoundaryVelocity();
-
-  for (int i=0; i<pow(m_noCells,3); i++)
-  {
-    m_listCells.at(i)->m_newVelocity=_velocityField.at(i);
-  }
-  setBoundaryValuesVec3("velocity");
+  m_newVelocityField=_velocityField;
+  setBoundaryValuesVec3(&m_newVelocityField);
   setBoundaryVelocity();
 }
 
 void Grid::setForceField(std::vector<ngl::Vec3> _forceField)
 {
-//  m_forceField=_forceField;
-//  setBoundaryValuesVec3(&m_forceField);
-
-  for (int i=0; i<pow(m_noCells,3); i++)
-  {
-    m_listCells.at(i)->m_externalForce=_forceField.at(i);
-  }
-  setBoundaryValuesVec3("force");
-  setBoundaryVelocity();
+  m_forceField=_forceField;
+  setBoundaryValuesVec3(&m_forceField);
 }
 
 void Grid::setPressureField(std::vector<float> _pressureField)
 {
-//  m_pressureField=_pressureField;
-//  setBoundaryValuesFloat(&m_pressureField);
-
-  for (int i=0; i<pow(m_noCells,3); i++)
-  {
-    m_listCells.at(i)->m_pressure=_pressureField.at(i);
-  }
-  setBoundaryValuesFloat("pressure");
-  setBoundaryVelocity();
+  m_pressureField=_pressureField;
+  setBoundaryValuesFloat(&m_pressureField);
 }
 
 void Grid::update(float _dt)
@@ -144,70 +94,39 @@ int Grid::getVectorIndex(int i, int j, int k)
   return vectorIndex;
 }
 
-void Grid::setBoundaryValuesVec3(std::string _fieldType)
+void Grid::setBoundaryValuesVec3(std::vector<ngl::Vec3> *_vec3Field)
 {
   for (int i=0; i<m_noCells; i++)
   {
     for (int j=0; j<m_noCells; j++)
     {
-//      _vec3Field->at(getVectorIndex(0,i,j))=_vec3Field->at(getVectorIndex(1,i,j));
-//      _vec3Field->at(getVectorIndex(m_noCells-1,i,j))=_vec3Field->at(getVectorIndex(m_noCells-2,i,j));
-//      _vec3Field->at(getVectorIndex(i,0,j))=_vec3Field->at(getVectorIndex(i,1,j));
-//      _vec3Field->at(getVectorIndex(i,m_noCells-1,j))=_vec3Field->at(getVectorIndex(i,m_noCells-2,j));
-//      _vec3Field->at(getVectorIndex(i,j,0))=_vec3Field->at(getVectorIndex(i,j,1));
-//      _vec3Field->at(getVectorIndex(i,j,m_noCells-1))=_vec3Field->at(getVectorIndex(i,j,m_noCells-2));
-
-      if(_fieldType=="velocity")
-      {
-        m_listCells.at(getVectorIndex(0,i,j))->m_newVelocity=m_listCells.at(getVectorIndex(1,i,j))->m_newVelocity;
-        m_listCells.at(getVectorIndex(m_noCells-1,i,j))->m_newVelocity=m_listCells.at(getVectorIndex(m_noCells-2,i,j))->m_newVelocity;
-        m_listCells.at(getVectorIndex(i,0,j))->m_newVelocity=m_listCells.at(getVectorIndex(i,1,j))->m_newVelocity;
-        m_listCells.at(getVectorIndex(i,m_noCells-1,j))->m_newVelocity=m_listCells.at(getVectorIndex(i,m_noCells-2,j))->m_newVelocity;
-        m_listCells.at(getVectorIndex(i,j,0))->m_newVelocity=m_listCells.at(getVectorIndex(i,j,1))->m_newVelocity;
-        m_listCells.at(getVectorIndex(i,j,m_noCells-1))->m_newVelocity=m_listCells.at(getVectorIndex(i,j,m_noCells-2))->m_newVelocity;
-
-      }
-      else if (_fieldType=="force")
-      {
-        m_listCells.at(getVectorIndex(0,i,j))->m_externalForce=m_listCells.at(getVectorIndex(1,i,j))->m_externalForce;
-        m_listCells.at(getVectorIndex(m_noCells-1,i,j))->m_externalForce=m_listCells.at(getVectorIndex(m_noCells-2,i,j))->m_externalForce;
-        m_listCells.at(getVectorIndex(i,0,j))->m_externalForce=m_listCells.at(getVectorIndex(i,1,j))->m_externalForce;
-        m_listCells.at(getVectorIndex(i,m_noCells-1,j))->m_externalForce=m_listCells.at(getVectorIndex(i,m_noCells-2,j))->m_externalForce;
-        m_listCells.at(getVectorIndex(i,j,0))->m_externalForce=m_listCells.at(getVectorIndex(i,j,1))->m_externalForce;
-        m_listCells.at(getVectorIndex(i,j,m_noCells-1))->m_externalForce=m_listCells.at(getVectorIndex(i,j,m_noCells-2))->m_externalForce;
-      }
-
+      _vec3Field->at(getVectorIndex(0,i,j))=_vec3Field->at(getVectorIndex(1,i,j));
+      _vec3Field->at(getVectorIndex(m_noCells-1,i,j))=_vec3Field->at(getVectorIndex(m_noCells-2,i,j));
+      _vec3Field->at(getVectorIndex(i,0,j))=_vec3Field->at(getVectorIndex(i,1,j));
+      _vec3Field->at(getVectorIndex(i,m_noCells-1,j))=_vec3Field->at(getVectorIndex(i,m_noCells-2,j));
+      _vec3Field->at(getVectorIndex(i,j,0))=_vec3Field->at(getVectorIndex(i,j,1));
+      _vec3Field->at(getVectorIndex(i,j,m_noCells-1))=_vec3Field->at(getVectorIndex(i,j,m_noCells-2));
 
     }
   }
 }
 
-void Grid::setBoundaryValuesFloat(std::string _fieldType)
+void Grid::setBoundaryValuesFloat(std::vector<float> *_floatField)
 {
   for (int i=0; i<m_noCells; i++)
   {
     for (int j=0; j<m_noCells; j++)
     {
-//      _floatField->at(getVectorIndex(0,i,j))=_floatField->at(getVectorIndex(1,i,j));
-//      _floatField->at(getVectorIndex(m_noCells-1,i,j))=_floatField->at(getVectorIndex(m_noCells-2,i,j));
-//      _floatField->at(getVectorIndex(i,0,j))=_floatField->at(getVectorIndex(i,1,j));
-//      _floatField->at(getVectorIndex(i,m_noCells-1,j))=_floatField->at(getVectorIndex(i,m_noCells-2,j));
-//      _floatField->at(getVectorIndex(i,j,0))=_floatField->at(getVectorIndex(i,j,1));
-//      _floatField->at(getVectorIndex(i,j,m_noCells-1))=_floatField->at(getVectorIndex(i,j,m_noCells-2));
-
-      if (_fieldType=="pressure")
-      {
-        m_listCells.at(getVectorIndex(0,i,j))->m_pressure=m_listCells.at(getVectorIndex(1,i,j))->m_pressure;
-        m_listCells.at(getVectorIndex(m_noCells-1,i,j))->m_pressure=m_listCells.at(getVectorIndex(m_noCells-2,i,j))->m_pressure;
-        m_listCells.at(getVectorIndex(i,0,j))->m_pressure=m_listCells.at(getVectorIndex(i,1,j))->m_pressure;
-        m_listCells.at(getVectorIndex(i,m_noCells-1,j))->m_pressure=m_listCells.at(getVectorIndex(i,m_noCells-2,j))->m_pressure;
-        m_listCells.at(getVectorIndex(i,j,0))->m_pressure=m_listCells.at(getVectorIndex(i,j,1))->m_pressure;
-        m_listCells.at(getVectorIndex(i,j,m_noCells-1))->m_pressure=m_listCells.at(getVectorIndex(i,j,m_noCells-2))->m_pressure;
-      }
-
+      _floatField->at(getVectorIndex(0,i,j))=_floatField->at(getVectorIndex(1,i,j));
+      _floatField->at(getVectorIndex(m_noCells-1,i,j))=_floatField->at(getVectorIndex(m_noCells-2,i,j));
+      _floatField->at(getVectorIndex(i,0,j))=_floatField->at(getVectorIndex(i,1,j));
+      _floatField->at(getVectorIndex(i,m_noCells-1,j))=_floatField->at(getVectorIndex(i,m_noCells-2,j));
+      _floatField->at(getVectorIndex(i,j,0))=_floatField->at(getVectorIndex(i,j,1));
+      _floatField->at(getVectorIndex(i,j,m_noCells-1))=_floatField->at(getVectorIndex(i,j,m_noCells-2));
     }
   }
 }
+
 
 void Grid::setBoundaryVelocity()
 {
@@ -215,34 +134,24 @@ void Grid::setBoundaryVelocity()
   {
     for (int j=0; j<m_noCells; j++)
     {
-//      m_newVelocityField.at(getVectorIndex(0,i,j)).m_x=0;
-//      m_newVelocityField.at(getVectorIndex(m_noCells-1,i,j)).m_x=0;
-//      m_newVelocityField.at(getVectorIndex(i,0,j)).m_y=0;
-//      m_newVelocityField.at(getVectorIndex(i,m_noCells-1,j)).m_y=0;
-//      m_newVelocityField.at(getVectorIndex(i,j,0)).m_z=0;
-//      m_newVelocityField.at(getVectorIndex(i,j,m_noCells-1)).m_z=0;
-      m_listCells.at(getVectorIndex(0,i,j))->m_newVelocity.m_x=0;
-      m_listCells.at(getVectorIndex(m_noCells-1,i,j))->m_newVelocity.m_x=0;
-      m_listCells.at(getVectorIndex(i,0,j))->m_newVelocity.m_y=0;
-      m_listCells.at(getVectorIndex(i,m_noCells-1,j))->m_newVelocity.m_y=0;
-      m_listCells.at(getVectorIndex(i,j,0))->m_newVelocity.m_z=0;
-      m_listCells.at(getVectorIndex(i,j,m_noCells-1))->m_newVelocity.m_z=0;
-
+      m_newVelocityField.at(getVectorIndex(0,i,j)).m_x=0;
+      m_newVelocityField.at(getVectorIndex(m_noCells-1,i,j)).m_x=0;
+      m_newVelocityField.at(getVectorIndex(i,0,j)).m_y=0;
+      m_newVelocityField.at(getVectorIndex(i,m_noCells-1,j)).m_y=0;
+      m_newVelocityField.at(getVectorIndex(i,j,0)).m_z=0;
+      m_newVelocityField.at(getVectorIndex(i,j,m_noCells-1)).m_z=0;
     }
   }
 }
 
 
 
+
 void Grid::swap()
 {
-//  m_oldVelocityField=m_newVelocityField;
-
-  for (int i=0; i<pow(m_noCells,3); i++)
-  {
-    m_listCells.at(i)->m_oldVelocity=m_listCells.at(i)->m_newVelocity;
-  }
+  m_oldVelocityField=m_newVelocityField;
 }
+
 
 void Grid::updateVelocityField(float _dt)
 {
@@ -258,27 +167,22 @@ void Grid::updateVelocityField(float _dt)
   //Diffuse (I-vdtD2)w3=w2
 
   //Project D2p=D.w3, w4=w3-Dp
+  project();
 }
+
 
 void Grid::addForce(float _dt)
 {
   for (int i=0; i<pow(m_noCells,3); i++)
   {
-//    if (m_solidBoundary.at(i)==false)
-//    {
-//      m_newVelocityField.at(i)=m_oldVelocityField.at(i)+(m_forceField.at(i)*_dt);
-//    }
-
-    if (m_listCells.at(i)->m_isSolid==false)
-    {
-      m_listCells.at(i)->m_newVelocity=m_listCells.at(i)->m_oldVelocity+(m_listCells.at(i)->m_externalForce*_dt);
-    }
+    m_newVelocityField.at(i)=m_oldVelocityField.at(i)+(m_forceField.at(i)*_dt);
   }
 
-  setBoundaryValuesVec3("velocity");
+  setBoundaryValuesVec3(&m_newVelocityField);
   setBoundaryVelocity();
 
 }
+
 
 
 void Grid::advect(float _dt)
@@ -294,7 +198,7 @@ void Grid::advect(float _dt)
         //Get old_velocity at (i,j,k)
         int index=getVectorIndex(i,j,k);
 
-        ngl::Vec3 oldVelocity=m_listCells.at(index)->m_oldVelocity;
+        ngl::Vec3 oldVelocity=m_oldVelocityField.at(index);
 
         //Get actual position for (i,j,k)
         ngl::Vec3 currPosition;
@@ -310,36 +214,67 @@ void Grid::advect(float _dt)
         ngl::Vec3 advectVelocity=getVelocityFromField(prevPosition);
 
         //Need to store new values temporarily so don't interfer with the w1 we're collecting values from
-        m_listCells.at(index)->m_tempStoreVec3=advectVelocity;
+        m_storeFieldVec3.at(index)=advectVelocity;
 
       }
     }
   }
 
   //When all advection velocities calculated, set the temporarily stored field to the newVelocity field.
-  for (int i=0; i<pow(m_noCells,3); i++)
-  {
-    m_listCells.at(i)->m_newVelocity=m_listCells.at(i)->m_tempStoreVec3;
-  }
+  m_newVelocityField=m_storeFieldVec3;
 
-  setBoundaryValuesVec3("velocity");
+  setBoundaryValuesVec3(&m_newVelocityField);
   setBoundaryVelocity();
 
 }
+
 
 void Grid::diffuse(float _dt)
 {
 
 }
 
-void Grid::project(float _dt)
-{
 
-//  int sizeOfVectors=(int)(pow((m_noCells-2),3));
-//  std::vector<ngl::Vec3> b[sizeOfVectors];
-//  std::vector<float> p[sizeOfVectors];
-//  std::vector<float> A[1];
-  //May be worth checking if boundary cell since don't have to calculate for these
+void Grid::project()
+{
+  ///To do:
+  /// Add check for convergence in loop
+
+
+  //Set number of iterations
+  int iterations=30;
+
+  //Set up b. Same for each iteration so only do this once
+  for (int k=1; k<(m_noCells-1); k++)
+  {
+    for (int j=1; j<(m_noCells-1); j++)
+    {
+      for (int i=1; i<(m_noCells-1); i++)
+      {
+        int index=getVectorIndex(i,j,k);
+
+        //Set up b=div(w3)
+        m_storeB.at(index)=calcDivergenceVec3(&m_newVelocityField,i,j,k);
+      }
+    }
+  }
+
+  //Set up A
+  float Aii=((-1)*6.0)/(pow(m_cellSize,2));
+  float Aij=1.0/(pow(m_cellSize,2));
+
+  //Initial guess is zero so initial field is b=div(w3)
+  m_storeFieldFloat=m_storeB;
+
+  //Set boundary values for this guess
+  setBoundaryValuesFloat(&m_storeFieldFloat);
+
+  //Send to linear solver to find p
+  linearSystemSolve(&m_pressureField, &m_storeFieldFloat, &m_storeB, Aii, Aij, iterations);
+
+
+  //From new pressure field calculate new velocity
+  ngl::Vec3 divP;
 
   for (int k=1; k<(m_noCells-1); k++)
   {
@@ -347,28 +282,22 @@ void Grid::project(float _dt)
     {
       for (int i=1; i<(m_noCells-1); i++)
       {
+        int index=getVectorIndex(i,j,k);
 
-        //Set up b=div(w3)
+        //Calulate div(p)
+        divP=calcDivergenceFloat(&m_pressureField, i, j, k);
 
-
-
-
+        //Calculate new velocity w4=w3-div(p)
+        m_newVelocityField.at(index)=m_newVelocityField.at(index)-divP;
 
       }
     }
   }
-  //Set up b
 
-  //Set up A
-
-  //Send to linear solver to find p
-
-  //Calulate div(p)
-
-  //Calculate new velocity w4=w3-div(p)
-
+  setBoundaryVelocity();
 
 }
+
 
 
 ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)
@@ -418,8 +347,7 @@ ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)
     //  std::cout<<"Index neigbour cell: ["<<index1_X<<","<<index1_Y<<","<<index1_Z<<"]\n";
 
     //Use trilinear interpolation to get field velocity based on position
-  //  fieldVelocity=trilinearInterpVec3(&m_newVelocityField, index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
-    fieldVelocity=trilinearInterpVec3("velocity", index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
+    fieldVelocity=trilinearInterpVec3(&m_newVelocityField, index0_X, index0_Y, index0_Z, index1_X, index1_Y, index1_Z, indexParticle);
   }
 
   //If either in boundary cell or outside bounding box
@@ -460,7 +388,7 @@ ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)
 
 
     //Find velocity at new index
-    fieldVelocity=m_listCells.at(getVectorIndex(index0_X,index0_Y,index0_Z))->m_newVelocity;
+    fieldVelocity=m_newVelocityField.at(getVectorIndex(index0_X,index0_Y,index0_Z));
 
   }
 
