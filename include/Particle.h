@@ -2,7 +2,9 @@
 #define PARTICLE
 
 #include <ngl/Vec3.h>
+#include <ngl/Mat4.h>
 #include "Grid.h"
+#include "mathFunction.h"
 
 class Emitter;
 
@@ -12,7 +14,7 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Particle ctor
   //---------------------------------------------------------------------------------
-  Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _lifeTime, Emitter *_emitter);
+  Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _radius, float _lifeTime, float _initialTemperature, Emitter *_emitter);
 
   //---------------------------------------------------------------------------------
   /// @brief Update particle position and velocity for time step _dt
@@ -30,7 +32,6 @@ private:
   //---------------------------------------------------------------------------------
   /// @brief Properties of one particle
   //---------------------------------------------------------------------------------
-  float m_mass;
   ngl::Vec3 m_position;
   ngl::Vec3 m_velocity;
 
@@ -42,6 +43,18 @@ private:
   //---------------------------------------------------------------------------------
   float m_lifeTime;
   float m_currLife;
+
+  //---------------------------------------------------------------------------------
+  /// @brief Size and mass of particle
+  //---------------------------------------------------------------------------------
+  float m_radius;
+  float m_mass;
+
+  //---------------------------------------------------------------------------------
+  /// @brief Temperature of particle
+  //---------------------------------------------------------------------------------
+  float m_temperature;
+  float m_initialTemperature;
 
   //---------------------------------------------------------------------------------
   /// @brief Emitter that particle belongs to

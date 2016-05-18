@@ -1,8 +1,15 @@
-#include "Grid.h"
+#include "mathFunction.h"
 
 #include <vector>
+#include <cmath>
 
-ngl::Vec3 Grid::RK2_integrator(ngl::Vec3 _u, ngl::Vec3 _du, float _dt)
+int mathFunction::getVectorIndex(int i, int j, int k, int _noCells)
+{
+  int vectorIndex=i+(_noCells*j)+(_noCells*_noCells*k);
+  return vectorIndex;
+}
+
+ngl::Vec3 mathFunction::RK2_integrator(ngl::Vec3 _u, ngl::Vec3 _du, float _dt)
 {
   ngl::Vec3 result;
 
@@ -35,7 +42,7 @@ ngl::Vec3 Grid::RK2_integrator(ngl::Vec3 _u, ngl::Vec3 _du, float _dt)
 
 }
 
-float Grid::linearInterp(std::vector<float> *_function, float _x)
+float mathFunction::linearInterp(std::vector<float> *_function, float _x)
 {
   float result=0;
 
@@ -43,7 +50,7 @@ float Grid::linearInterp(std::vector<float> *_function, float _x)
 
 }
 
-ngl::Vec3 Grid::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, int _index0_X, int _index0_Y, int _index0_Z, int _index1_X, int _index1_Y, int _index1_Z, ngl::Vec3 _indexActual)
+ngl::Vec3 mathFunction::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, int _index0_X, int _index0_Y, int _index0_Z, int _index1_X, int _index1_Y, int _index1_Z, ngl::Vec3 _indexActual, int _noCells)
 {
   ngl::Vec3 result=ngl::Vec3(0.0,0.0,0.0);
 
@@ -52,15 +59,20 @@ ngl::Vec3 Grid::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, int _inde
   float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
   float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
 
+  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
+  x_diff=std::abs(x_diff);
+  y_diff=std::abs(y_diff);
+  z_diff=std::abs(z_diff);
+
   //Find indices to be used when finding values of the function
-  int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z);
-  int index_100=getVectorIndex(_index1_X, _index0_Y, _index0_Z);
-  int index_001=getVectorIndex(_index0_X, _index0_Y, _index1_Z);
-  int index_101=getVectorIndex(_index1_X, _index0_Y, _index1_Z);
-  int index_110=getVectorIndex(_index1_X, _index1_Y, _index0_Z);
-  int index_010=getVectorIndex(_index0_X, _index1_Y, _index0_Z);
-  int index_011=getVectorIndex(_index0_X, _index1_Y, _index1_Z);
-  int index_111=getVectorIndex(_index1_X, _index1_Y, _index1_Z);
+  int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z, _noCells);
+  int index_100=getVectorIndex(_index1_X, _index0_Y, _index0_Z, _noCells);
+  int index_001=getVectorIndex(_index0_X, _index0_Y, _index1_Z, _noCells);
+  int index_101=getVectorIndex(_index1_X, _index0_Y, _index1_Z, _noCells);
+  int index_110=getVectorIndex(_index1_X, _index1_Y, _index0_Z, _noCells);
+  int index_010=getVectorIndex(_index0_X, _index1_Y, _index0_Z, _noCells);
+  int index_011=getVectorIndex(_index0_X, _index1_Y, _index1_Z, _noCells);
+  int index_111=getVectorIndex(_index1_X, _index1_Y, _index1_Z, _noCells);
 
   //Find function values for the various indices
   ngl::Vec3 function_000=_function->at(index_000);
@@ -85,12 +97,14 @@ ngl::Vec3 Grid::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, int _inde
   //Interpolate along z
   ngl::Vec3 interpZ=((1-z_diff)*interpY_0)+(z_diff*interpY_1);
 
+//  std::cout<<
+
   //Return result
   result=interpZ;
   return result;
 }
 
-float Grid::trilinearInterpFloat(std::vector<float> *_function, int _index0_X, int _index0_Y, int _index0_Z, int _index1_X, int _index1_Y, int _index1_Z, ngl::Vec3 _indexActual)
+float mathFunction::trilinearInterpFloat(std::vector<float> *_function, int _index0_X, int _index0_Y, int _index0_Z, int _index1_X, int _index1_Y, int _index1_Z, ngl::Vec3 _indexActual, int _noCells)
 {
   float result=0;
 
@@ -100,14 +114,14 @@ float Grid::trilinearInterpFloat(std::vector<float> *_function, int _index0_X, i
   float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
 
   //Find indices to be used when finding values of the function
-  int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z);
-  int index_100=getVectorIndex(_index1_X, _index0_Y, _index0_Z);
-  int index_001=getVectorIndex(_index0_X, _index0_Y, _index1_Z);
-  int index_101=getVectorIndex(_index1_X, _index0_Y, _index1_Z);
-  int index_110=getVectorIndex(_index1_X, _index1_Y, _index0_Z);
-  int index_010=getVectorIndex(_index0_X, _index1_Y, _index0_Z);
-  int index_011=getVectorIndex(_index0_X, _index1_Y, _index1_Z);
-  int index_111=getVectorIndex(_index1_X, _index1_Y, _index1_Z);
+  int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z, _noCells);
+  int index_100=getVectorIndex(_index1_X, _index0_Y, _index0_Z, _noCells);
+  int index_001=getVectorIndex(_index0_X, _index0_Y, _index1_Z, _noCells);
+  int index_101=getVectorIndex(_index1_X, _index0_Y, _index1_Z, _noCells);
+  int index_110=getVectorIndex(_index1_X, _index1_Y, _index0_Z, _noCells);
+  int index_010=getVectorIndex(_index0_X, _index1_Y, _index0_Z, _noCells);
+  int index_011=getVectorIndex(_index0_X, _index1_Y, _index1_Z, _noCells);
+  int index_111=getVectorIndex(_index1_X, _index1_Y, _index1_Z, _noCells);
 
   //Find function values for the various indices
   float function_000=_function->at(index_000);
@@ -138,7 +152,7 @@ float Grid::trilinearInterpFloat(std::vector<float> *_function, int _index0_X, i
 }
 
 
-void Grid::linearSystemSolve(std::vector<float> *result, std::vector<float> *_initField, std::vector<float> *_b, float _Aii, float _Aij, int _iterations)
+void mathFunction::linearSystemSolve(std::vector<float> *result, std::vector<float> *_initField, std::vector<float> *_b, float _Aii, float _Aij, int _iterations, int _noCells)
 {
   //Set up variables
   float p_ijk;
@@ -159,23 +173,23 @@ void Grid::linearSystemSolve(std::vector<float> *result, std::vector<float> *_in
   for (int iterationCount=0; iterationCount<_iterations; iterationCount++)
   {
     //Loop over i,j,k
-    for (int k=1; k<(m_noCells-1); k++)
+    for (int k=1; k<(_noCells-1); k++)
     {
-      for (int j=1; j<(m_noCells-1); j++)
+      for (int j=1; j<(_noCells-1); j++)
       {
-        for (int i=1; i<(m_noCells-1); i++)
+        for (int i=1; i<(_noCells-1); i++)
         {
           //Get index for this cell (i,j,k)
-          index=getVectorIndex(i,j,k);
+          index=getVectorIndex(i,j,k, _noCells);
 
           //Find initField of itself and 6 nearest neighbours
           p_ijk=_initField->at(index);
-          p_i1jk=_initField->at(getVectorIndex(i+1,j,k));
-          p_i0jk=_initField->at(getVectorIndex(i-1,j,k));
-          p_ij1k=_initField->at(getVectorIndex(i,j+1,k));
-          p_ij0k=_initField->at(getVectorIndex(i,j-1,k));
-          p_ijk1=_initField->at(getVectorIndex(i,j,k+1));
-          p_ijk0=_initField->at(getVectorIndex(i,j,k-1));
+          p_i1jk=_initField->at(getVectorIndex(i+1,j,k, _noCells));
+          p_i0jk=_initField->at(getVectorIndex(i-1,j,k, _noCells));
+          p_ij1k=_initField->at(getVectorIndex(i,j+1,k, _noCells));
+          p_ij0k=_initField->at(getVectorIndex(i,j-1,k, _noCells));
+          p_ijk1=_initField->at(getVectorIndex(i,j,k+1, _noCells));
+          p_ijk0=_initField->at(getVectorIndex(i,j,k-1, _noCells));
 
           //Add nearest neighbour pressures
           sumNeighbours=_Aij*(p_i1jk + p_i0jk + p_ij1k + p_ij0k + p_ijk1 + p_ijk0);
@@ -200,44 +214,44 @@ void Grid::linearSystemSolve(std::vector<float> *result, std::vector<float> *_in
 
 }
 
-float Grid::calcDivergenceVec3(std::vector<ngl::Vec3> *_field, int _index_X, int _index_Y, int _index_Z)
+float mathFunction::calcDivergenceVec3(std::vector<ngl::Vec3> *_field, int _index_X, int _index_Y, int _index_Z, float _cellSize, int _noCells)
 {
   float result;
 
-  ngl::Vec3 fieldValue_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z));
-  ngl::Vec3 fieldValue_i0jk=_field->at(getVectorIndex((_index_X-1), _index_Y, _index_Z));
-  ngl::Vec3 fieldValue_ij1k=_field->at(getVectorIndex(_index_X, (_index_Y+1), _index_Z));
-  ngl::Vec3 fieldValue_ij0k=_field->at(getVectorIndex(_index_X, (_index_Y-1), _index_Z));
-  ngl::Vec3 fieldValue_ijk1=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z+1)));
-  ngl::Vec3 fieldValue_ijk0=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z-1)));
+  ngl::Vec3 fieldValue_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z, _noCells));
+  ngl::Vec3 fieldValue_i0jk=_field->at(getVectorIndex((_index_X-1), _index_Y, _index_Z, _noCells));
+  ngl::Vec3 fieldValue_ij1k=_field->at(getVectorIndex(_index_X, (_index_Y+1), _index_Z, _noCells));
+  ngl::Vec3 fieldValue_ij0k=_field->at(getVectorIndex(_index_X, (_index_Y-1), _index_Z, _noCells));
+  ngl::Vec3 fieldValue_ijk1=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z+1), _noCells));
+  ngl::Vec3 fieldValue_ijk0=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z-1), _noCells));
 
   float dfxdx=fieldValue_i1jk.m_x-fieldValue_i0jk.m_x;
   float dfydy=fieldValue_ij1k.m_y-fieldValue_ij0k.m_y;
   float dfzdz=fieldValue_ijk1.m_z-fieldValue_ijk0.m_z;
 
-  float constant=0.5/m_cellSize;
+  float constant=0.5/_cellSize;
 
   result=constant*(dfxdx+dfydy+dfzdz);
 
   return result;
 }
 
-ngl::Vec3 Grid::calcDivergenceFloat(std::vector<float> *_field, int _index_X, int _index_Y, int _index_Z)
+ngl::Vec3 mathFunction::calcDivergenceFloat(std::vector<float> *_field, int _index_X, int _index_Y, int _index_Z, float _cellSize, int _noCells)
 {
   ngl::Vec3 result;
 
-  float fieldValue_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z));
-  float fieldValue_i0jk=_field->at(getVectorIndex((_index_X-1), _index_Y, _index_Z));
-  float fieldValue_ij1k=_field->at(getVectorIndex(_index_X, (_index_Y+1), _index_Z));
-  float fieldValue_ij0k=_field->at(getVectorIndex(_index_X, (_index_Y-1), _index_Z));
-  float fieldValue_ijk1=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z+1)));
-  float fieldValue_ijk0=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z-1)));
+  float fieldValue_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z, _noCells));
+  float fieldValue_i0jk=_field->at(getVectorIndex((_index_X-1), _index_Y, _index_Z, _noCells));
+  float fieldValue_ij1k=_field->at(getVectorIndex(_index_X, (_index_Y+1), _index_Z, _noCells));
+  float fieldValue_ij0k=_field->at(getVectorIndex(_index_X, (_index_Y-1), _index_Z, _noCells));
+  float fieldValue_ijk1=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z+1), _noCells));
+  float fieldValue_ijk0=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z-1), _noCells));
 
   float dfdx=fieldValue_i1jk-fieldValue_i0jk;
   float dfdy=fieldValue_ij1k-fieldValue_ij0k;
   float dfdz=fieldValue_ijk1-fieldValue_ijk0;
 
-  float constant=0.5/m_cellSize;
+  float constant=0.5/_cellSize;
 
   result=ngl::Vec3(dfdx, dfdy, dfdz);
   result=constant*result;
@@ -246,27 +260,59 @@ ngl::Vec3 Grid::calcDivergenceFloat(std::vector<float> *_field, int _index_X, in
 
 }
 
-ngl::Vec3 Grid::calcCurl(std::vector<ngl::Vec3> *_field, int _index_X, int _index_Y, int _index_Z)
+void mathFunction::calculateCurl(std::vector<ngl::Vec3> *_field, std::vector<ngl::Vec3> *curlField, std::vector<float> *curlMagnitude, int _noCells, float _cellSize)
 {
-  ngl::Vec3 result;
+  //Set up needed variables
+  ngl::Vec3 field_i1jk;
+  ngl::Vec3 field_i0jk;
+  ngl::Vec3 field_ij1k;
+  ngl::Vec3 field_ij0k;
+  ngl::Vec3 field_ijk1;
+  ngl::Vec3 field_ijk0;
 
-  ngl::Vec3 field_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z));
-  ngl::Vec3 field_i0jk=_field->at(getVectorIndex((_index_X-1), _index_Y, _index_Z));
-  ngl::Vec3 field_ij1k=_field->at(getVectorIndex(_index_X, (_index_Y+1), _index_Z));
-  ngl::Vec3 field_ij0k=_field->at(getVectorIndex(_index_X, (_index_Y-1), _index_Z));
-  ngl::Vec3 field_ijk1=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z+1)));
-  ngl::Vec3 field_ijk0=_field->at(getVectorIndex(_index_X, _index_Y, (_index_Z-1)));
+  float dfxdy;
+  float dfxdz;
+  float dfydx;
+  float dfydz;
+  float dfzdx;
+  float dfzdy;
 
-  float dfxdy=(0.5/m_cellSize)*(field_ij1k.m_x-field_ij0k.m_x);
-  float dfxdz=(0.5/m_cellSize)*(field_ijk1.m_x-field_ijk0.m_x);
-  float dfydx=(0.5/m_cellSize)*(field_i1jk.m_y-field_i0jk.m_y);
-  float dfydz=(0.5/m_cellSize)*(field_ijk1.m_y-field_ijk0.m_y);
-  float dfzdx=(0.5/m_cellSize)*(field_i1jk.m_z-field_i0jk.m_z);
-  float dfzdy=(0.5/m_cellSize)*(field_ij1k.m_z-field_ij0k.m_z);
+  ngl::Vec3 resultCurl;
 
-  result.m_x=(dfzdy-dfydz);
-  result.m_y=(dfxdz-dfzdx);
-  result.m_z=(dfydx-dfxdy);
+  for (int k=1; k<(_noCells-1); k++)
+  {
+    for (int j=1; j<(_noCells-1); j++)
+    {
+      for (int i=1; i<(_noCells-1); i++)
+      {
+        //Find values of field at (i+1,j,k), (i-1,j,k) etc.
+        field_i1jk=_field->at(getVectorIndex(i+1, j, k, _noCells));
+        field_i0jk=_field->at(getVectorIndex(i-1, j, k, _noCells));
+        field_ij1k=_field->at(getVectorIndex(i, j+1, k, _noCells));
+        field_ij0k=_field->at(getVectorIndex(i, j-1, k, _noCells));
+        field_ijk1=_field->at(getVectorIndex(i, j, k+1, _noCells));
+        field_ijk0=_field->at(getVectorIndex(i, j, k-1, _noCells));
 
-  return result;
+        //Calculate approximate value for df_x/dy etc
+        //df_x/dy=(1/2*cellSize)*(field(i+1,j,k)-field(i-1,j,k))
+        dfxdy=(0.5/_cellSize)*(field_ij1k.m_x-field_ij0k.m_x);
+        dfxdz=(0.5/_cellSize)*(field_ijk1.m_x-field_ijk0.m_x);
+        dfydx=(0.5/_cellSize)*(field_i1jk.m_y-field_i0jk.m_y);
+        dfydz=(0.5/_cellSize)*(field_ijk1.m_y-field_ijk0.m_y);
+        dfzdx=(0.5/_cellSize)*(field_i1jk.m_z-field_i0jk.m_z);
+        dfzdy=(0.5/_cellSize)*(field_ij1k.m_z-field_ij0k.m_z);
+
+        //Curl is nabla crossed with velocity
+        //Curl_x=df_z/dy - df_y/dz
+        resultCurl.m_x=(dfzdy-dfydz);
+        resultCurl.m_y=(dfxdz-dfzdx);
+        resultCurl.m_z=(dfydx-dfxdy);
+
+        curlField->at(getVectorIndex(i,j,k, _noCells))=resultCurl;
+
+        //Calculate magnitude of curl
+        curlMagnitude->at(getVectorIndex(i,j,k, _noCells))=resultCurl.length();
+      }
+    }
+  }
 }

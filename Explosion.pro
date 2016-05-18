@@ -28,6 +28,7 @@ HEADERS+=   $$PWD/include/OpenGLWindow.h \
             include/Particle.h \
             include/Emitter.h \
             include/Grid.h \
+    include/mathFunction.h
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

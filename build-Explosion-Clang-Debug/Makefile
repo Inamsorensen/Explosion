@@ -64,7 +64,8 @@ OBJECTS       = obj/main.o \
 DIST          = /home/i7435906/RenderSim/Simulation/Assignment/Explosion/Explosion.pro /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/OpenGLWindow.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h \
-		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/main.cpp \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/main.cpp \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Particle.cpp \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Grid.cpp \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Emitter.cpp \
@@ -394,7 +395,7 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/OpenGLWindow.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h $(DISTDIR)/
+	$(COPY_FILE) --parents /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/OpenGLWindow.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h $(DISTDIR)/
 	$(COPY_FILE) --parents /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/main.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Particle.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Grid.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Emitter.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/OpenGLWindow.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/mathFunctions.cpp $(DISTDIR)/
 
 
@@ -582,6 +583,7 @@ moc/moc_OpenGLWindow.cpp: /home/i7435906/NGL/include/ngl/Camera.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/OpenGLWindow.h
 	/opt/qt/5.5/gcc_64/bin/moc $(DEFINES) -I/opt/qt/5.5/gcc_64/mkspecs/linux-clang -I/home/i7435906/RenderSim/Simulation/Assignment/Explosion -I/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include -I/home/i7435906/NGL/include -I/opt/qt/5.5/gcc_64/include -I/opt/qt/5.5/gcc_64/include/QtOpenGL -I/opt/qt/5.5/gcc_64/include/QtWidgets -I/opt/qt/5.5/gcc_64/include/QtGui -I/opt/qt/5.5/gcc_64/include/QtCore -I. /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/OpenGLWindow.h -o moc/moc_OpenGLWindow.cpp
 
@@ -760,7 +762,8 @@ obj/main.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/main.cp
 		/opt/qt/5.5/gcc_64/include/QtGui/QImage \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h \
-		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/main.cpp
 
 obj/Particle.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Particle.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h \
@@ -882,12 +885,13 @@ obj/Particle.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Par
 		/opt/qt/5.5/gcc_64/include/QtOpenGL/qtopenglglobal.h \
 		/opt/qt/5.5/gcc_64/include/QtGui/QSurfaceFormat \
 		/opt/qt/5.5/gcc_64/include/QtGui/qsurfaceformat.h \
+		/home/i7435906/NGL/include/ngl/Mat4.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h \
 		/home/i7435906/NGL/include/ngl/Camera.h \
 		/home/i7435906/NGL/include/ngl/Vec4.h \
 		/home/i7435906/NGL/include/ngl/Vec2.h \
-		/home/i7435906/NGL/include/ngl/Mat4.h \
 		/home/i7435906/NGL/include/ngl/RibExport.h \
 		/home/i7435906/NGL/include/ngl/Plane.h \
 		/home/i7435906/NGL/include/ngl/AABB.h \
@@ -1024,7 +1028,13 @@ obj/Grid.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Grid.cp
 		/opt/qt/5.5/gcc_64/include/QtOpenGL/qglcolormap.h \
 		/opt/qt/5.5/gcc_64/include/QtOpenGL/qtopenglglobal.h \
 		/opt/qt/5.5/gcc_64/include/QtGui/QSurfaceFormat \
-		/opt/qt/5.5/gcc_64/include/QtGui/qsurfaceformat.h
+		/opt/qt/5.5/gcc_64/include/QtGui/qsurfaceformat.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h \
+		/home/i7435906/NGL/include/ngl/Random.h \
+		/home/i7435906/NGL/include/ngl/Colour.h \
+		/home/i7435906/NGL/include/ngl/Singleton.h \
+		/home/i7435906/NGL/include/ngl/Vec4.h \
+		/home/i7435906/NGL/include/ngl/Vec2.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/Grid.o /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Grid.cpp
 
 obj/Emitter.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Emitter.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h \
@@ -1157,6 +1167,7 @@ obj/Emitter.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/Emit
 		/home/i7435906/NGL/include/ngl/AbstractVAO.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h \
 		/home/i7435906/NGL/include/ngl/Random.h \
 		/home/i7435906/NGL/include/ngl/Colour.h \
 		/home/i7435906/NGL/include/ngl/Singleton.h
@@ -1335,10 +1346,11 @@ obj/OpenGLWindow.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src
 		/opt/qt/5.5/gcc_64/include/QtGui/QImage \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Emitter.h \
 		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Particle.h \
-		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/OpenGLWindow.o /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/OpenGLWindow.cpp
 
-obj/mathFunctions.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/mathFunctions.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h \
+obj/mathFunctions.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/mathFunctions.cpp /home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/mathFunction.h \
 		/home/i7435906/NGL/include/ngl/Vec3.h \
 		/home/i7435906/NGL/include/ngl/Types.h \
 		/home/i7435906/NGL/include/ngl/glew.h \
@@ -1456,7 +1468,8 @@ obj/mathFunctions.o: /home/i7435906/RenderSim/Simulation/Assignment/Explosion/sr
 		/opt/qt/5.5/gcc_64/include/QtOpenGL/qglcolormap.h \
 		/opt/qt/5.5/gcc_64/include/QtOpenGL/qtopenglglobal.h \
 		/opt/qt/5.5/gcc_64/include/QtGui/QSurfaceFormat \
-		/opt/qt/5.5/gcc_64/include/QtGui/qsurfaceformat.h
+		/opt/qt/5.5/gcc_64/include/QtGui/qsurfaceformat.h \
+		/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include/Grid.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/mathFunctions.o /home/i7435906/RenderSim/Simulation/Assignment/Explosion/src/mathFunctions.cpp
 
 obj/moc_OpenGLWindow.o: moc/moc_OpenGLWindow.cpp 
