@@ -113,6 +113,11 @@ float mathFunction::trilinearInterpFloat(std::vector<float> *_function, int _ind
   float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
   float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
 
+  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
+  x_diff=std::abs(x_diff);
+  y_diff=std::abs(y_diff);
+  z_diff=std::abs(z_diff);
+
   //Find indices to be used when finding values of the function
   int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z, _noCells);
   int index_100=getVectorIndex(_index1_X, _index0_Y, _index0_Z, _noCells);
@@ -152,7 +157,7 @@ float mathFunction::trilinearInterpFloat(std::vector<float> *_function, int _ind
 }
 
 
-void mathFunction::linearSystemSolve(std::vector<float> *result, std::vector<float> *_initField, std::vector<float> *_b, float _Aii, float _Aij, int _iterations, int _noCells)
+void mathFunction::linearSystemSolveFloat(std::vector<float> *result, std::vector<float> *_initField, std::vector<float> *_b, float _Aii, float _Aij, int _iterations, int _noCells, float _setMinimumValue)
 {
   //Set up variables
   float p_ijk;
@@ -195,11 +200,23 @@ void mathFunction::linearSystemSolve(std::vector<float> *result, std::vector<flo
           sumNeighbours=_Aij*(p_i1jk + p_i0jk + p_ij1k + p_ij0k + p_ijk1 + p_ijk0);
 
           //Subtract from b to find new pressure at (i,j,k)
-//          newValue=(1.0/_Aii)*(_b->at(index)-sumNeighbours);
-          newValue=(1.0/_Aii)*(sumNeighbours+p_ijk);
+          newValue=(1.0/_Aii)*(_b->at(index)-sumNeighbours);
+//          newValue=(1.0/_Aii)*(sumNeighbours+p_ijk);
 
           //Set result at (i,j,k) to this new pressure value
-          result->at(index)=newValue;
+          ///Tried to set to minimum value if below this. Not sure if correct
+          if (newValue>=_setMinimumValue)
+          {
+            result->at(index)=newValue;
+          }
+          else
+          {
+            result->at(index)=_setMinimumValue;
+          }
+          ///This is probably what should be used
+//          result->at(index)=newValue;
+
+//          result->at(index)=std::abs(newValue);
 
         }
 

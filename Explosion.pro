@@ -21,14 +21,16 @@ SOURCES+= $$PWD/src/main.cpp \
           src/Grid.cpp \
           src/Emitter.cpp \
           src/OpenGLWindow.cpp \
-          src/mathFunctions.cpp
+          src/mathFunctions.cpp \
+    src/ExplosionController.cpp
 
 # same for the .h files
 HEADERS+=   $$PWD/include/OpenGLWindow.h \
             include/Particle.h \
             include/Emitter.h \
             include/Grid.h \
-    include/mathFunction.h
+    include/mathFunction.h \
+    include/ExplosionController.h
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

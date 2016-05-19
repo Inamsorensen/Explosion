@@ -50,21 +50,21 @@ int main(int argc, char **argv)
 //  ngl::Vec3 gridpos=ngl::Vec3(-2.5,-2.5,-2.5);
 ////  m_gridPosition=ngl::Vec3(-5,-5,-5);
 //  float gridSize=5.0;
-//  int noCells=32;
+//  int noCells=16;
 
-//  Grid* grid=Grid::createGrid(gridpos,gridSize,noCells);
+//  float noise=0.2;
+//  float vorticity=4.0;
 
-//  ngl::Vec3 particlepos=ngl::Vec3(0.0,0.0,0.0);
-//  grid->getVelocityFromField(particlepos);
+//  Grid* grid=Grid::createGrid(gridpos,gridSize,noCells,noise, vorticity);
 
-//  ngl::Vec3 particlepos1=ngl::Vec3(-2.0,0.0,0.0);
-//  grid->getVelocityFromField(particlepos1);
+//  float explosionTemp=10000;
+//  float addDiv=1.0;
 
-//  ngl::Vec3 particlepos2=ngl::Vec3(2.0,0.0,0.0);
-//  grid->getVelocityFromField(particlepos2);
+//  ngl::Vec3 explosionPos=ngl::Vec3(0.0,-4.0,0.0);
+//  float explosionRadius=10.0;
 
-//  ngl::Vec3 particlepos3=ngl::Vec3(0.0,-1.0,0.0);
-//  grid->getVelocityFromField(particlepos3);
+//  grid->setExplosion(explosionPos, explosionRadius, explosionTemp, addDiv);
+
 
 //  return EXIT_SUCCESS;
 //}

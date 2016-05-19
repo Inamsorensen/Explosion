@@ -9,25 +9,13 @@
 
 Grid* Grid::m_instance=nullptr;
 
-Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells, float _noise, float _vorticityConstant)
+Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells)
 {
   //Set initial variables for grid and calculate cell size
   m_origin=_origin;
   m_gridSize=_gridSize;
   m_noCells=_noCells;
   m_cellSize=m_gridSize/m_noCells;
-
-  //Set ambient temp to 20C=293K
-  m_ambientTemp=293.0;
-
-  m_vorticityConstant=_vorticityConstant;
-
-  //Get instance for random number generator
-  ngl::Random* rand=ngl::Random::instance();
-  float noiseValX;
-  float noiseValY;
-  float noiseValZ;
-  ngl::Vec3 velocity;
 
   //Set up space and initial values for fields
   for (int i=0; i<pow(m_noCells,3); i++)
@@ -36,38 +24,11 @@ Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells, float _noise, float
     m_pressureField.push_back(0.0);
     m_forceField.push_back(ngl::Vec3(0.0,0.0,0.0));
 
-
-    //Noise in velocity field
-    rand->setSeed(i);
-    noiseValX=rand->randomNumber(_noise);
-    rand->setSeed(i+1000);
-    noiseValY=rand->randomNumber(_noise);
-    rand->setSeed(i+2000);
-    noiseValZ=rand->randomNumber(_noise);
-//    rand->setSeed(i);
-//    noiseValX=rand->randomPositiveNumber(_noise);
-//    rand->setSeed(i+1000);
-//    noiseValY=rand->randomPositiveNumber(_noise);
-//    rand->setSeed(i+2000);
-//    noiseValZ=rand->randomPositiveNumber(_noise);
-//    velocity.m_x=noiseValX;
-//    velocity.m_y=noiseValY;
-//    velocity.m_z=noiseValZ;
-
-    //Test velocity field effect
-    velocity.m_x=0.0;
-    velocity.m_y=1.0;
-    velocity.m_z=0.0;
-
-    //Add velocity to field
-    m_oldVelocityField.push_back(velocity);
-//    m_oldVelocityField.push_back(ngl::Vec3(0.0,0.0,0.0));
-
-//    std::cout<<noiseValX<<" "<<noiseValY<<" "<<noiseValZ<<"\n";
+    m_oldVelocityField.push_back(ngl::Vec3(0.0,0.0,0.0));
 
 
     //Set ambient temperature everywhere
-    m_oldTemperatureField.push_back(m_ambientTemp);
+    m_oldTemperatureField.push_back(0.0);
 
     //Set space for store fields
     m_storeFieldVec3.push_back(ngl::Vec3(0.0,0.0,0.0));
@@ -78,6 +39,9 @@ Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells, float _noise, float
     m_curlVectorField.push_back(ngl::Vec3(0.0,0.0,0.0));
     m_curlMagnitudes.push_back(0.0);
 
+    //Set space for divergence field
+    m_divergenceField.push_back(0.0);
+
     //Set space for storeB
     m_storeB.push_back(0.0);
 
@@ -86,17 +50,14 @@ Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells, float _noise, float
   m_newVelocityField=m_oldVelocityField;
   m_newTemperatureField=m_oldTemperatureField;
 
-  ///Need to set boundary values if change from zero
-  setBoundaryVelocity();
-
 }
 
 
-Grid* Grid::createGrid(ngl::Vec3 _origin, float _gridSize, int _noCells, float _noise, float _vorticityConstant)
+Grid* Grid::createGrid(ngl::Vec3 _origin, float _gridSize, int _noCells)
 {
   if(m_instance==nullptr)
   {
-    m_instance=new Grid(_origin, _gridSize, _noCells, _noise, _vorticityConstant);
+    m_instance=new Grid(_origin, _gridSize, _noCells);
   }
 
   return m_instance;
@@ -112,26 +73,131 @@ Grid* Grid::getGrid()
   return m_instance;
 }
 
-
-void Grid::setVelocityField(std::vector<ngl::Vec3> _velocityField)
+void Grid::setVelocityFieldConstants(float _noise, float _vorticityConstant)
 {
-  m_newVelocityField=_velocityField;
+  m_noiseConstant=_noise;
+  m_vorticityConstant=_vorticityConstant;
+
+  //Get instance for random number generator
+  ngl::Random* rand=ngl::Random::instance();
+  float noiseValX;
+  float noiseValY;
+  float noiseValZ;
+  ngl::Vec3 velocity;
+
+  for (int i=0; i<pow(m_noCells,3); i++)
+  {
+    //Noise in velocity field
+    rand->setSeed(i);
+    noiseValX=rand->randomNumber(m_noiseConstant);
+    rand->setSeed(i+1000);
+    noiseValY=rand->randomNumber(m_noiseConstant);
+    rand->setSeed(i+2000);
+    noiseValZ=rand->randomNumber(m_noiseConstant);
+  //    rand->setSeed(i);
+  //    noiseValX=rand->randomPositiveNumber(_noise);
+  //    rand->setSeed(i+1000);
+  //    noiseValY=rand->randomPositiveNumber(_noise);
+  //    rand->setSeed(i+2000);
+  //    noiseValZ=rand->randomPositiveNumber(_noise);
+    velocity.m_x=noiseValX;
+    velocity.m_y=noiseValY;
+    velocity.m_z=noiseValZ;
+
+    //Test velocity field effect
+  //    velocity.m_x=0.0;
+  //    velocity.m_y=1.0;
+  //    velocity.m_z=0.0;
+
+    m_newVelocityField.at(i)=velocity;
+  }
+
   setBoundaryVelocity();
+
 }
 
-void Grid::setForceField(std::vector<ngl::Vec3> _forceField)
+void Grid::setTemperatureFieldConstants(float _ambientTemperature, float _thermalConductivity, float _coolingConstant, float _buoyancyConstant)
 {
-  m_forceField=_forceField;
+  m_ambientTemp=_ambientTemperature;
+  m_thermalConductivity=_thermalConductivity;
+  m_coolingConstant=_coolingConstant;
+  m_buoyancyConstant=_buoyancyConstant;
+
+  for (int i=0; i<pow(m_noCells,3); i++)
+  {
+    m_newTemperatureField.at(i)=m_ambientTemp;
+  }
+
 }
 
-void Grid::setPressureField(std::vector<float> _pressureField)
+void Grid::setExplosion(ngl::Vec3 _originExplosion, float _radius, float _temperature, float _divAddition)
 {
-  m_pressureField=_pressureField;
-}
+  m_maxTemp=_temperature;
 
-void Grid::setTemperatureField(std::vector<float> _temperatureField)
-{
-  m_newTemperatureField=_temperatureField;
+  //Find cells that will contain explosive sphere
+    //Find cell where the origin is
+  ngl::Vec3 indexExplosionOrigin=(1/m_cellSize)*(_originExplosion-m_origin);
+  int indexOrigin_X;
+  int indexOrigin_Y;
+  int indexOrigin_Z;
+  indexOrigin_X=trunc(indexExplosionOrigin.m_x);
+  indexOrigin_Y=trunc(indexExplosionOrigin.m_y);
+  indexOrigin_Z=trunc(indexExplosionOrigin.m_z);
+
+    //Check that index is inside grid, if not throw error
+  if (indexOrigin_X<1 || indexOrigin_Y<1 || indexOrigin_Z<1 || indexOrigin_X>(m_noCells-1) || indexOrigin_Y>(m_noCells-1) || indexOrigin_Z>(m_noCells-1))
+  {
+    std::cout<<"ExplosionOrigin: ["<<indexOrigin_X<<" "<<indexOrigin_Y<<" "<<indexOrigin_Z<<"]\n";
+    throw std::invalid_argument("Origin of explosion is in a boundary cell or outside the grid");
+  }
+
+    //Check radius against cellSize to see how many cells will be changed in one direction
+  int noCellsInRadius=trunc(_radius/m_cellSize);
+
+  //Check that explosion isn't too big compared to grid
+  if (_radius>(((m_noCells-2)/2)*m_cellSize))
+  {
+    std::cout<<"No cells in radius: "<<noCellsInRadius<<"\n";
+    throw std::invalid_argument("Explosion takes up the whole grid or more.");
+  }
+
+  //Loop over cells that are likely to be within the radius of explosion
+  for (int k=(indexOrigin_Z-noCellsInRadius); k<=(indexOrigin_Z+noCellsInRadius); k++)
+  {
+    for (int j=(indexOrigin_Y-noCellsInRadius); j<=(indexOrigin_Y+noCellsInRadius); j++)
+    {
+      for (int i=(indexOrigin_X-noCellsInRadius); i<=(indexOrigin_X+noCellsInRadius); i++)
+      {
+
+        //Calculate position of current grid point relative to explosion origin
+        float positionX=(i-indexOrigin_X)*m_cellSize;
+        float positionY=(j-indexOrigin_Y)*m_cellSize;
+        float positionZ=(k-indexOrigin_Z)*m_cellSize;
+
+        //Check that index is inside radius of sphere
+        if (pow(_radius,2)>=(pow(positionX,2)+pow(positionY,2)+pow(positionZ,2)))
+        {
+
+          //Check that cell isn't boundary cell
+          if (i<1 || j<1 || k<1 || i>(m_noCells-1) || j>(m_noCells-1) || k>(m_noCells-1))
+          {
+            //If outside - do nothing
+          }
+          else
+          {
+          int indexCurrentCell=getVectorIndex(i,j,k);
+
+            //Set temperature of cells found to _temperature
+          m_newTemperatureField.at(indexCurrentCell)=m_maxTemp;
+
+            //Add divAddition.
+          m_divergenceField.at(indexCurrentCell)+=_divAddition;
+
+          }
+        }
+      }
+    }
+  }
 }
 
 void Grid::update(float _dt)
@@ -243,17 +309,18 @@ void Grid::updateVelocityField(float _dt)
   project();
 
   //Debug check for final velocity. Prints index and velocity
-  for (int k=0; k<m_noCells; k++)
-  {
-    for (int j=0; j<m_noCells; j++)
-    {
-      for (int i=0; i<m_noCells; i++)
-      {
+//  for (int k=0; k<m_noCells; k++)
+//  {
+//    for (int j=0; j<m_noCells; j++)
+//    {
+//      for (int i=0; i<m_noCells; i++)
+//      {
 //        std::cout<<"Cell: ["<<i<<" "<<j<<" "<<k<<"] Final velocity: ["<<m_newVelocityField.at(getVectorIndex(i,j,k)).m_x<<" "<<m_newVelocityField.at(getVectorIndex(i,j,k)).m_y<<" "<<m_newVelocityField.at(getVectorIndex(i,j,k)).m_z<<"]\n";
-      }
-    }
-  }
+//      }
+//    }
+//  }
 }
+
 
 
 void Grid::addForce(float _dt)
@@ -263,6 +330,9 @@ void Grid::addForce(float _dt)
 
   //Calculate vorticity forces
   calculateVorticity();
+
+  //Calculate buoyancy forces
+  calculateBuoyancy();
 
   //Add forces to velocity field
   for (int i=0; i<pow(m_noCells,3); i++)
@@ -336,6 +406,7 @@ void Grid::project()
 
   //Set number of iterations
   int iterations=30;
+//  int iterations=100;
 
   //Set up b. Same for each iteration so only do this once
   for (int k=1; k<(m_noCells-1); k++)
@@ -348,22 +419,30 @@ void Grid::project()
 
         //Set up b=div(w3)
         m_storeB.at(index)=mathFunction::calcDivergenceVec3(&m_newVelocityField,i,j,k, m_cellSize, m_noCells);
+
+        //Add divergence from explosion setup or from particle interaction
+        m_storeB.at(index)+=m_divergenceField.at(index);
       }
     }
   }
 
   //Set up A
-  float Aii=((-1)*6.0)/(pow(m_cellSize,2));
+//  float Aii=((-1.0)*6.0)/(pow(m_cellSize,2));
+  float Aii=(6.0)/(pow(m_cellSize,2));
+//  float Aii=6.0;
   float Aij=1.0/(pow(m_cellSize,2));
+//  float Aij=1.0;
 
   //Initial guess is zero so initial field is b=div(w3)
-  m_storeFieldFloat=m_storeB;
+//  m_storeFieldFloat=m_storeB;
+  m_storeFieldFloat=m_pressureField;
+
 
   //Set boundary values for this guess
   setBoundaryValuesFloat(&m_storeFieldFloat);
 
   //Send to linear solver to find p
-  mathFunction::linearSystemSolve(&m_pressureField, &m_storeFieldFloat, &m_storeB, Aii, Aij, iterations, m_cellSize);
+  mathFunction::linearSystemSolveFloat(&m_pressureField, &m_storeFieldFloat, &m_storeB, Aii, Aij, iterations, m_noCells, 0.0);
 
 
   //From new pressure field calculate new velocity
@@ -390,6 +469,7 @@ void Grid::project()
   setBoundaryVelocity();
 
 }
+
 
 void Grid::calculateVorticity()
 {
@@ -434,26 +514,47 @@ void Grid::calculateVorticity()
   }
 }
 
+void Grid::calculateBuoyancy()
+{
+  //Applies force only in up direction, ie. y-direction
+  //Force=buoyancyConst*(T_at_index-T_ambient)
+
+  float forceY;
+
+  for (int k=1; k<(m_noCells-1); k++)
+  {
+    for (int j=1; j<(m_noCells-1); j++)
+    {
+      for (int i=1; i<(m_noCells-1); i++)
+      {
+        int index=getVectorIndex(i,j,k);
+        forceY=m_buoyancyConstant*(m_newTemperatureField.at(index)-m_ambientTemp);
+        m_forceField.at(index).m_y+=forceY;
+      }
+    }
+  }
+}
+
 void Grid::updateTemperatureField(float _dt)
 {
   //Advect temperature
   advectTemperature(_dt);
 
   //Diffuse
+  diffuseTemperature(_dt);
 
   //Set boundaries
   setBoundaryTemperature();
 
   //Cool particles
+  dissipateTemperature();
 
 
 }
 
+
 void Grid::advectTemperature(float _dt)
 {
-  ///To do:
-  /// Set boundary temperature to ambient
-
   //Need to loop over 3D space i,j,k
   for (int k=0; k<m_noCells; k++)
   {
@@ -474,7 +575,7 @@ void Grid::advectTemperature(float _dt)
         currPosition.m_z=(k+0.5)*m_cellSize+m_origin.m_z;
 
         //Use these values in RK2 to find x0
-        ngl::Vec3 prevPosition=mathFunction::RK2_integrator(currPosition,oldVelocity,(-1)*_dt);
+        ngl::Vec3 prevPosition=mathFunction::RK2_integrator(currPosition,oldVelocity,(-1.0)*_dt);
 
         //Determine the cell that is in
         //Is cell inside boundaries? If not find nearest boundary cell and use that value for advection.
@@ -490,6 +591,67 @@ void Grid::advectTemperature(float _dt)
   //When all advection velocities calculated, set the temporarily stored field to the newVelocity field.
   m_newTemperatureField=m_storeFieldFloat;
 
+  setBoundaryTemperature();
+
+}
+
+void Grid::diffuseTemperature(float _dt)
+{
+  //Set number of iterations
+  int iterations=30;
+
+  //Calculate Aij and Aii
+  float Aij;
+  float Aii;
+
+  ///Might need to divide by 1/m_cellSize^2, like velocity projection
+  Aij=_dt*m_thermalConductivity*pow(m_cellSize,2);
+
+  Aii=1.0+(6.0*Aij);
+
+  //Set up b in AT=b
+  m_storeB=m_newTemperatureField;
+
+  //Set initial guess to previous temperature field?
+  m_storeFieldFloat=m_oldTemperatureField;
+
+  //Use linear solver to find new temp
+  mathFunction::linearSystemSolveFloat(&m_newTemperatureField, &m_storeFieldFloat, &m_storeB, Aii, Aij, iterations, m_noCells, m_ambientTemp);
+
+  //Set boundary temp
+  setBoundaryTemperature();
+}
+
+void Grid::dissipateTemperature()
+{
+  ///To do: m_tempMax should change as fluid cools down. Would need a function to find largest value in vector
+
+  float overallDifference=m_maxTemp-m_ambientTemp;
+  float currentDifference;
+  float ratioTempDifference;
+
+  float coolingContribution;
+
+  for (int i=0; i<pow(m_noCells,3); i++)
+  {
+    currentDifference=m_newTemperatureField.at(i)-m_ambientTemp;
+
+    //RatioTempDiff=(T_at_index-T_ambient)/(T_max-T_ambient)
+    ratioTempDifference=currentDifference/overallDifference;
+
+    //Calculate cooling contribution=coolConst*(ratioTempDiff)^4
+    coolingContribution=m_coolingConstant*(pow(ratioTempDifference,4));
+
+    //Calculate new temperature after cooling
+    m_newTemperatureField.at(i)-=coolingContribution;
+
+
+    //Need to make sure that temp does not go below ambient temp
+    if (m_newTemperatureField.at(i)<m_ambientTemp)
+    {
+      m_newTemperatureField.at(i)=m_ambientTemp;
+    }
+  }
 }
 
 ngl::Vec3 Grid::getVelocityFromField(ngl::Vec3 _particlePosition)

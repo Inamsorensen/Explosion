@@ -44,10 +44,9 @@ public:
   //----------------------------------------------------------------------------------------------------------------------
   static void calculateCurl(std::vector<ngl::Vec3> *_field, std::vector<ngl::Vec3> *curlField, std::vector<float> *curlMagnitude, int _noCells, float _cellSize);
   //----------------------------------------------------------------------------------------------------------------------
-  /// @brief Linear system solver
+  /// @brief Linear system solver to calculate resulting float field
   //----------------------------------------------------------------------------------------------------------------------
-  static void linearSystemSolve(std::vector<float> *result, std::vector<float> *_initField, std::vector<float> *_b, float _Aii, float _Aij, int _iterations, int _noCells);
-
+  static void linearSystemSolveFloat(std::vector<float> *result, std::vector<float> *_initField, std::vector<float> *_b, float _Aii, float _Aij, int _iterations, int _noCells, float _setMinimumValue);
 };
 
 #endif // MATHFUNCTION

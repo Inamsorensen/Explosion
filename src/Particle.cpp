@@ -89,8 +89,8 @@ void Particle::update(float _dt)
     m_velocity+=_dt*dragForce;
 
     //Calculate new position
-//    m_position+=_dt*m_velocity;
-    m_position+=_dt*velocityFromField;
+    m_position+=_dt*m_velocity;
+//    m_position+=_dt*velocityFromField;
 
 
     //Update temperature

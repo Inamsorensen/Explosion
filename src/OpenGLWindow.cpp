@@ -29,8 +29,8 @@ OpenGLWindow::OpenGLWindow()
 
   setTitle("Explosion");
 
-  m_simElapsedTime=0.0;
-  m_noFrames=0;
+//  m_simElapsedTime=0.0;
+//  m_noFrames=0;
 
 }
 
@@ -133,15 +133,13 @@ void OpenGLWindow::initializeGL()
 
 
   //Setup simulation
-  simulationSetup();
+  m_explosionController=ExplosionController::instance();
 
   //Setup VAO for bounding box
   buildVAO();
 
-  //Set camera
-  m_emitter->setCamera(&m_camera);
-  m_emitter->setShaderName("Phong");
-
+  //Send render variables to explosion controller
+  m_explosionController->setRenderVariables(&m_camera, "Phong");
 
 
   // as re-size is not explicitly called we need to do this.
@@ -155,54 +153,50 @@ void OpenGLWindow::initializeGL()
 
 void OpenGLWindow::simulationSetup()
 {
-  //Time step setup
-  m_simTimeStep=0.01;
+//  //Time step setup
+//  m_simTimeStep=0.01;
 
 
-  //Grid setup
-  m_gridPosition=ngl::Vec3(-2.5,-2.5,-2.5);
-//  m_gridPosition=ngl::Vec3(-5,-5,-5);
-  m_gridSize=5.0;
-  m_noCells=16;
+//  //Grid setup
+//  m_gridPosition=ngl::Vec3(-2.5,-2.5,-2.5);
+//  m_gridSize=5.0;
+//  m_noCells=16;
 
-  float noise=2.0;
-  float vorticityConstant=30.0;
+//  float noise=0.2;
+//  float vorticityConstant=4.0;
 
-  Grid* grid=Grid::createGrid(m_gridPosition,m_gridSize,m_noCells, noise, vorticityConstant);
-
-  std::vector<ngl::Vec3> zeroVectorField;
-  std::vector<float> zeroFloatField;
-  std::vector<ngl::Vec3> gravity;
-  for (int i=0; i<pow(m_noCells,3); i++)
-  {
-    zeroVectorField.push_back(ngl::Vec3(0.0,0.0,0.0));
-    zeroFloatField.push_back(0.0);
-    gravity.push_back(ngl::Vec3(0.0,-9.81,0.0));
-  }
-
-  //grid->setVelocityField(zeroVectorField);
-//  grid->setPressureField(zeroFloatField);
-  //grid->setForceField(gravity);
+//  Grid* grid=Grid::createGrid(m_gridPosition,m_gridSize,m_noCells, noise, vorticityConstant);
 
 
-  //Particle setup
-  float particleMass=0.1;
-  float particleRadius=0.1;
-  ngl::Vec3 initialVelocity=ngl::Vec3(0.0,0.0,0.0);
-  float particleLifeTime=10;
-  float particleDrag=1;
-  float particleInitialTemperature=293.0;
 
 
-  //Emitter setup
-  m_emitterPosition=ngl::Vec3(0.0,0.0,0.0);
-  m_emitterRadius=0.3;
-  m_noParticles=2000;
-//  m_noParticles=1;
-  m_emissionRate=10;
+//  //Particle setup
+//  float particleMass=0.1;
+//  float particleRadius=0.1;
+//  ngl::Vec3 initialVelocity=ngl::Vec3(0.0,0.0,0.0);
+//  float particleLifeTime=10;
+//  float particleDrag=1;
+//  float particleInitialTemperature=293.0;
 
-  m_emitter=new Emitter(m_emitterPosition,m_emitterRadius,m_noParticles,m_emissionRate);
-  m_emitter->setUpParticles(particleMass, initialVelocity, particleLifeTime, particleRadius, particleDrag, particleInitialTemperature);
+
+//  //Emitter setup
+//  m_emitterPosition=ngl::Vec3(0.0,0.0,0.0);
+//  m_emitterRadius=0.3;
+//  m_noParticles=2000;
+////  m_noParticles=1;
+//  m_emissionRate=10;
+
+//  m_emitter=new Emitter(m_emitterPosition,m_emitterRadius,m_noParticles,m_emissionRate);
+//  m_emitter->setUpParticles(particleMass, initialVelocity, particleLifeTime, particleRadius, particleDrag, particleInitialTemperature);
+
+
+//  //Explosion setup
+//  float explosionTemp=10000;
+//  float addDiv=0.01;
+//  ngl::Vec3 explosionPos=ngl::Vec3(0.0,0.0,0.0);
+//  float explosionRadius=1.0;
+
+//  grid->setExplosion(explosionPos, explosionRadius, explosionTemp, addDiv);
 
 }
 
@@ -280,8 +274,9 @@ void OpenGLWindow::paintGL()
 
   ngl::Mat4 MVP;
   ngl::Transformation ModelMatrix_BBox;
-  ModelMatrix_BBox.setPosition(m_gridPosition);
-  ModelMatrix_BBox.setScale(m_gridSize,m_gridSize,m_gridSize);
+  ModelMatrix_BBox.setPosition(m_explosionController->getGridPosition());
+  float gridSize=m_explosionController->getGridSize();
+  ModelMatrix_BBox.setScale(gridSize,gridSize,gridSize);
 
 
   //MVP calculated from multiplying ModelMatrix_BBox with ModelMatrix_Camera?
@@ -298,10 +293,11 @@ void OpenGLWindow::paintGL()
 
 
   //Draw particles
-  m_emitter->renderParticles(ModelMatrix_Camera);
+//  m_emitter->renderParticles(ModelMatrix_Camera);
+  m_explosionController->render(ModelMatrix_Camera);
 
-  //Increase frame count
-  m_noFrames+=1;
+//  //Increase frame count
+//  m_noFrames+=1;
  }
 
 
@@ -416,15 +412,17 @@ void OpenGLWindow::keyPressEvent(QKeyEvent *_event)
    // update particle:
   case Qt::Key_U :
   {
-    //Update grid
-    Grid* grid=Grid::getGrid();
-    grid->update(m_simTimeStep);
+//    //Update grid
+//    Grid* grid=Grid::getGrid();
+//    grid->update(m_simTimeStep);
 
-    //Update particles
-    m_emitter->update(m_simTimeStep);
+//    //Update particles
+//    m_emitter->update(m_simTimeStep);
 
-    //Increase elapsed time
-    m_simElapsedTime+=m_simTimeStep;
+//    //Increase elapsed time
+//    m_simElapsedTime+=m_simTimeStep;
+
+    m_explosionController->update();
 
     //Render new frame
     update();
@@ -438,15 +436,17 @@ void OpenGLWindow::keyPressEvent(QKeyEvent *_event)
 
 void OpenGLWindow::timerEvent(QTimerEvent *_event )
 {
-  //Update grid
-  Grid* grid=Grid::getGrid();
-  grid->update(m_simTimeStep);
+//  //Update grid
+//  Grid* grid=Grid::getGrid();
+//  grid->update(m_simTimeStep);
 
-  //Update particles
-  m_emitter->update(m_simTimeStep);
+//  //Update particles
+//  m_emitter->update(m_simTimeStep);
 
-  //Increase elapsed time
-  m_simElapsedTime+=m_simTimeStep;
+//  //Increase elapsed time
+//  m_simElapsedTime+=m_simTimeStep;
+
+  m_explosionController->update();
 
   //Render new frame
   update();
