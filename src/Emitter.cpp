@@ -12,6 +12,7 @@ Emitter::Emitter(ngl::Vec3 _position, float _radius, int _noParticles, int _emis
   m_noParticles=_noParticles;
   m_emissionRate=_emissionRate;
 
+
 }
 
 Emitter::~Emitter()
@@ -43,9 +44,11 @@ void Emitter::setUpParticles(float _particleMass, ngl::Vec3 _initialParticleVelo
     rand->setSeed(i);
     float randRadius=rand->randomPositiveNumber(m_radius);
     float randTheta=rand->randomPositiveNumber(2*M_PI);
+    float randPhi=rand->randomPositiveNumber(M_PI);
     ngl::Vec3 pos=m_position;
-    pos.m_x+=randRadius*cos(randTheta);
-    pos.m_z+=randRadius*sin(randTheta);
+    pos.m_x+=randRadius*cos(randTheta)*sin(randPhi);
+    pos.m_y+=randRadius*cos(randPhi);
+    pos.m_z+=randRadius*sin(randTheta)*sin(randPhi);
 
 //    ngl::Random* rand=ngl::Random::instance();
 //    rand->setSeed(i);
@@ -59,7 +62,7 @@ void Emitter::setUpParticles(float _particleMass, ngl::Vec3 _initialParticleVelo
     ///To do: Randomise velocity slightly?
     //Initial velocity noise
     ngl::Vec3 velocity=m_particleInitVelocity;
-    float velNoise=rand->randomNumber(5.0);
+//    float velNoise=rand->randomNumber(5.0);
 //    velocity.m_x+=velNoise;
 //    velocity.m_z+=velNoise;
 
@@ -72,22 +75,37 @@ void Emitter::setUpParticles(float _particleMass, ngl::Vec3 _initialParticleVelo
   }
 }
 
+void Emitter::setParticleBurningParameters(float _burnThreshold, float _burnRate, float _thermalConductivity, float _thermalMass, float _heatRelease, float _volumeRelease, float _sootCreationConstant, float _sootThreshold)
+{
+  m_burnThreshold=_burnThreshold;
+  m_burnRate=_burnRate;
+  m_thermalConductivity=_thermalConductivity;
+  m_thermalMass=_thermalMass;
+  m_heatRelease=_heatRelease;
+  m_volumeRelease=_volumeRelease;
+  m_sootCreation=_sootCreationConstant;
+  m_sootThreshold=_sootThreshold;
+}
 
 void Emitter::update(float _dt)
 {
-  int countActive=0;
+//  int countActive=0;
+//  for (int i=0; i<m_noParticles; i++)
+//  {
+//    if (m_particles[i]->m_active==true)
+//    {
+//      m_particles[i]->update(_dt);
+//    }
+//    else if(countActive<m_emissionRate)
+//    {
+//      m_particles[i]->m_active=true;
+//      countActive+=1;
+//    }
+
+//  }
   for (int i=0; i<m_noParticles; i++)
   {
-    if (m_particles[i]->m_active==true)
-    {
-      m_particles[i]->update(_dt);
-    }
-    else if(countActive<m_emissionRate)
-    {
-      m_particles[i]->m_active=true;
-      countActive+=1;
-    }
-
+    m_particles[i]->update(_dt);
   }
 
 
@@ -96,12 +114,16 @@ void Emitter::update(float _dt)
 void Emitter::renderParticles(ngl::Mat4 _ModelMatrix_Camera)
 {
   m_ModelMatrix_Camera=_ModelMatrix_Camera;
+//  for (int i=0; i<m_noParticles; i++)
+//  {
+//    if (m_particles[i]->m_active==true)
+//    {
+//     m_particles[i]->render();
+//    }
+//  }
   for (int i=0; i<m_noParticles; i++)
   {
-    if (m_particles[i]->m_active==true)
-    {
-     m_particles[i]->render();
-    }
+    m_particles[i]->render();
   }
 
 }

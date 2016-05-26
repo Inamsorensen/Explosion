@@ -35,7 +35,7 @@ ngl::Vec3 mathFunction::RK2_integrator(ngl::Vec3 _u, ngl::Vec3 _du, float _dt)
   ngl::Vec3 k2=_du+(_dt*k1);
 
   //un+1=un+h/2*(k1+k2)
-  result=_u+((_dt/2)*(k1+k2));
+  result=_u+((_dt/2.0)*(k1+k2));
 
 
   return result;
@@ -44,7 +44,7 @@ ngl::Vec3 mathFunction::RK2_integrator(ngl::Vec3 _u, ngl::Vec3 _du, float _dt)
 
 float mathFunction::linearInterp(std::vector<float> *_function, float _x)
 {
-  float result=0;
+  float result=0.0;
 
   return result;
 
@@ -54,15 +54,22 @@ ngl::Vec3 mathFunction::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, i
 {
   ngl::Vec3 result=ngl::Vec3(0.0,0.0,0.0);
 
+  ///Old method index1 could be smaller than index0 hence needing abs
+  /// Also gives ratio of how far inside cell over length of cell. However, not needed as indices and should hence be 1.
   //Calculate differences to be used in the interpolation
-  float x_diff=(_indexActual.m_x-_index0_X)/(_index1_X-_index0_X);
-  float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
-  float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
+//  float x_diff=(_indexActual.m_x-_index0_X)/(_index1_X-_index0_X);
+//  float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
+//  float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
+//  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
+//  x_diff=std::abs(x_diff);
+//  y_diff=std::abs(y_diff);
+//  z_diff=std::abs(z_diff);
 
-  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
-  x_diff=std::abs(x_diff);
-  y_diff=std::abs(y_diff);
-  z_diff=std::abs(z_diff);
+  ///New method doesn't require abs, and also casts index0 as float
+  float x_diff=_indexActual.m_x-(float)_index0_X;
+  float y_diff=_indexActual.m_y-(float)_index0_Y;
+  float z_diff=_indexActual.m_z-(float)_index0_Z;
+
 
   //Find indices to be used when finding values of the function
   int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z, _noCells);
@@ -77,17 +84,17 @@ ngl::Vec3 mathFunction::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, i
   //Find function values for the various indices
   ngl::Vec3 function_000=_function->at(index_000);
   ngl::Vec3 function_100=_function->at(index_100);
-  ngl::Vec3 function_001=_function->at(index_001);
-  ngl::Vec3 function_101=_function->at(index_101);
-  ngl::Vec3 function_110=_function->at(index_110);
   ngl::Vec3 function_010=_function->at(index_010);
+  ngl::Vec3 function_001=_function->at(index_001);
+  ngl::Vec3 function_110=_function->at(index_110);
+  ngl::Vec3 function_101=_function->at(index_101);
   ngl::Vec3 function_011=_function->at(index_011);
   ngl::Vec3 function_111=_function->at(index_111);
 
   //Interpolate along x
   ngl::Vec3 interpX_00=((1-x_diff)*function_000)+(x_diff*function_100);
-  ngl::Vec3 interpX_01=((1-x_diff)*function_001)+(x_diff*function_101);
   ngl::Vec3 interpX_10=((1-x_diff)*function_010)+(x_diff*function_110);
+  ngl::Vec3 interpX_01=((1-x_diff)*function_001)+(x_diff*function_101);
   ngl::Vec3 interpX_11=((1-x_diff)*function_011)+(x_diff*function_111);
 
   //Interpolate along y
@@ -97,8 +104,6 @@ ngl::Vec3 mathFunction::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, i
   //Interpolate along z
   ngl::Vec3 interpZ=((1-z_diff)*interpY_0)+(z_diff*interpY_1);
 
-//  std::cout<<
-
   //Return result
   result=interpZ;
   return result;
@@ -106,17 +111,24 @@ ngl::Vec3 mathFunction::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, i
 
 float mathFunction::trilinearInterpFloat(std::vector<float> *_function, int _index0_X, int _index0_Y, int _index0_Z, int _index1_X, int _index1_Y, int _index1_Z, ngl::Vec3 _indexActual, int _noCells)
 {
-  float result=0;
+  float result=0.0;
 
+///Old method
+//  //Calculate differences to be used in the interpolation
+//  float x_diff=(_indexActual.m_x-_index0_X)/(_index1_X-_index0_X);
+//  float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
+//  float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
+
+//  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
+//  x_diff=std::abs(x_diff);
+//  y_diff=std::abs(y_diff);
+//  z_diff=std::abs(z_diff);
+
+  ///New method
   //Calculate differences to be used in the interpolation
-  float x_diff=(_indexActual.m_x-_index0_X)/(_index1_X-_index0_X);
-  float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
-  float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
-
-  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
-  x_diff=std::abs(x_diff);
-  y_diff=std::abs(y_diff);
-  z_diff=std::abs(z_diff);
+  float x_diff=_indexActual.m_x-(float)_index0_X;
+  float y_diff=_indexActual.m_y-(float)_index0_Y;
+  float z_diff=_indexActual.m_z-(float)_index0_Z;
 
   //Find indices to be used when finding values of the function
   int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z, _noCells);
@@ -131,17 +143,17 @@ float mathFunction::trilinearInterpFloat(std::vector<float> *_function, int _ind
   //Find function values for the various indices
   float function_000=_function->at(index_000);
   float function_100=_function->at(index_100);
-  float function_001=_function->at(index_001);
-  float function_101=_function->at(index_101);
-  float function_110=_function->at(index_110);
   float function_010=_function->at(index_010);
+  float function_001=_function->at(index_001);
+  float function_110=_function->at(index_110);
+  float function_101=_function->at(index_101);
   float function_011=_function->at(index_011);
   float function_111=_function->at(index_111);
 
   //Interpolate along x
   float interpX_00=((1-x_diff)*function_000)+(x_diff*function_100);
-  float interpX_01=((1-x_diff)*function_001)+(x_diff*function_101);
   float interpX_10=((1-x_diff)*function_010)+(x_diff*function_110);
+  float interpX_01=((1-x_diff)*function_001)+(x_diff*function_101);
   float interpX_11=((1-x_diff)*function_011)+(x_diff*function_111);
 
   //Interpolate along y

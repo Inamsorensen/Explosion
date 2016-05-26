@@ -6,14 +6,15 @@ ExplosionController* ExplosionController::m_instance=nullptr;
 ExplosionController::ExplosionController()
 {
   //Timer setup
-  m_simTimeStep=0.01;
+  m_simTimeStep=0.025;
   m_simElapsedTime=0.0;
   m_noFrames=0;
 
   //Grid setup
-  m_gridPosition=ngl::Vec3(-2.5,-2.5,-2.5);
-  m_gridSize=5.0;
+  m_gridPosition=ngl::Vec3(-0.5,-0.5,-0.5);
+  m_gridSize=1.0;
   m_noCells=16;
+//  m_noCells=32;
 
   m_noiseConstant=0.2;
   m_vorticityConstant=4.0;
@@ -30,30 +31,44 @@ ExplosionController::ExplosionController()
   //Explosion setup
   m_explosionOrigin=ngl::Vec3(0.0,0.0,0.0);
 //  m_explosionRadius=0.3;
-  m_explosionRadius=1.0;
-  m_explosionTemperature=10000;
-//  m_explosionDivergence=0.01;
-  m_explosionDivergence=10.0;
+  m_explosionRadius=0.05;
+  m_explosionTemperature=11000; ///To do: Fix initial velocity of particles somehow so sucked in not going out. Also if temp too high, then particles speed up too much. Slowed by interacting particles with fluid?
+//  m_explosionTemperature=0;
+  m_explosionDivergence=0.01;
+//  m_explosionDivergence=5.0;
 
   m_grid->setExplosion(m_explosionOrigin, m_explosionRadius, m_explosionTemperature, m_explosionDivergence);
 
   //Particle setup
-  m_particleMass=0.1;
+//  m_particleMass=0.1;
+  m_particleMass=0.7;
   m_particleRadius=0.1;
   m_particleInitVelocity=ngl::Vec3(0.0,0.0,0.0);
-  m_particleLifeTime=10;
+  m_particleLifeTime=1000;
   m_particleDragConstant=950.0;
   m_particleInitTemperature=m_ambientTemp;
 
   //Emitter setup
-  m_emitterPosition=m_explosionOrigin;
-  m_emitterRadius=m_explosionRadius;
-  m_noParticles=2000;
+  m_emitterPosition=m_explosionOrigin; ///Increasing this so definitely inside sphere would be good too
+  m_emitterRadius=m_explosionRadius; ///Decreasing this below the explosion radius will decrease the number of particles going sideways
+  m_noParticles=16000;
 //  m_noParticles=1;
   m_emissionRate=10;
 
   m_emitter=new Emitter(m_emitterPosition, m_emitterRadius, m_noParticles, m_emissionRate);
   m_emitter->setUpParticles(m_particleMass, m_particleInitVelocity, m_particleLifeTime, m_particleRadius, m_particleDragConstant, m_particleInitTemperature);
+
+  //Fuel particle burn set up
+  m_particleBurnThreshold=50.0;
+  m_particleBurnRate=0.67;
+  m_particleHeatRelease=40.0*(65536.0/(float)m_noParticles);
+  m_particleVolumeRelease=0.001*(65536.0/(float)m_noParticles);
+  m_particleSootCreation=260.0;
+  m_particleThermalMass=1.6;
+  m_particleThermalConductivity=1.0;
+  m_particleSootThreshold=1.0;
+
+  m_emitter->setParticleBurningParameters(m_particleBurnThreshold, m_particleBurnRate, m_particleThermalConductivity, m_particleThermalMass, m_particleHeatRelease, m_particleVolumeRelease, m_particleSootCreation, m_particleSootThreshold);
 
 }
 

@@ -50,6 +50,20 @@ public:
   inline ngl::Mat4 getModelMatrixCamera() const {return m_ModelMatrix_Camera;}
   inline float getDragConstant() const {return m_particleDragConstant;}
 
+  //---------------------------------------------------------------------------------
+  /// @brief Set and call parameters for burning of particles
+  //---------------------------------------------------------------------------------
+  void setParticleBurningParameters(float _burnThreshold, float _burnRate, float _thermalConductivity, float _thermalMass, float _heatRelease, float _volumeRelease, float _sootCreationConstant, float _sootThreshold);
+  inline float getBurnThreshold() const {return m_burnThreshold;}
+  inline float getBurnRate() const {return m_burnRate;}
+  inline float getThermalConductivity() const {return m_thermalConductivity;}
+  inline float getThermalMass() const {return m_thermalMass;}
+  inline float getHeatRelease() const {return m_heatRelease;}
+  inline float getVolumeRelease() const {return m_volumeRelease;}
+  inline float getSootCreation() const {return m_sootCreation;}
+  inline float getSootThreshold() const {return m_sootThreshold;}
+
+
 
 private:
 
@@ -90,6 +104,42 @@ private:
   /// @brief Particle drag coefficient. Used to calculate drag force
   //---------------------------------------------------------------------------------
   float m_particleDragConstant;
+
+  //---------------------------------------------------------------------------------
+  /// @brief Parameters for burning of particles
+  //---------------------------------------------------------------------------------
+  //---------------------------------------------------------------------------------
+  /// @brief Threshold temperature at which fuel particles start burning
+  //---------------------------------------------------------------------------------
+  float m_burnThreshold;
+  //---------------------------------------------------------------------------------
+  /// @brief Thermal conductivity between air and fuel
+  //---------------------------------------------------------------------------------
+  float m_thermalConductivity;
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief Rate at which fuel particles burn, ie. mass combusted per second
+  //----------------------------------------------------------------------------------------------------------------------
+  float m_burnRate;
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief Thermal mass of particle
+  //----------------------------------------------------------------------------------------------------------------------
+  float m_thermalMass;
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief Heat released per unit combusted mass of fuel
+  //----------------------------------------------------------------------------------------------------------------------
+  float m_heatRelease;
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief Gas volume released per unit combusted mass of fuel
+  //----------------------------------------------------------------------------------------------------------------------
+  float m_volumeRelease;
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief Mass of soot produced per unit combusted mass of fuel
+  //----------------------------------------------------------------------------------------------------------------------
+  float m_sootCreation;
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief Threshold above which fuel particle turns to soot
+  //----------------------------------------------------------------------------------------------------------------------
+  float m_sootThreshold;
 
 
   //---------------------------------------------------------------------------------

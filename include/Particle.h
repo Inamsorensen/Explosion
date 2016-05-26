@@ -6,6 +6,13 @@
 #include "Grid.h"
 #include "mathFunction.h"
 
+enum particleStates
+{
+  Unburnt,
+  Burning,
+  Soot
+};
+
 class Emitter;
 
 class Particle
@@ -26,9 +33,22 @@ public:
   //---------------------------------------------------------------------------------
   void render() const;
 
-   bool m_active;
+  bool m_active;
 
 private:
+  //---------------------------------------------------------------------------------
+  /// @brief Update particle position from gravity and gas field velocity
+  //---------------------------------------------------------------------------------
+  void updatePosition(float _dt);
+  //---------------------------------------------------------------------------------
+  /// @brief Update particle temperature from gas field
+  //---------------------------------------------------------------------------------
+  void updateTemperature(float _dt);
+  //---------------------------------------------------------------------------------
+  /// @brief Burn particle
+  //---------------------------------------------------------------------------------
+  void burnParticle(float _dt);
+
   //---------------------------------------------------------------------------------
   /// @brief Properties of one particle
   //---------------------------------------------------------------------------------
@@ -55,6 +75,12 @@ private:
   //---------------------------------------------------------------------------------
   float m_temperature;
   float m_initialTemperature;
+
+  //---------------------------------------------------------------------------------
+  /// @brief Particle state and soot accumulator
+  //---------------------------------------------------------------------------------
+  particleStates m_burnState;
+  float m_sootAccumulator;
 
   //---------------------------------------------------------------------------------
   /// @brief Emitter that particle belongs to
