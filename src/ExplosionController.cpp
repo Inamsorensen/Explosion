@@ -31,7 +31,7 @@ ExplosionController::ExplosionController()
 
   //Explosion setup
   m_explosionOrigin=ngl::Vec3(0.0,-0.3,0.0);
-  m_explosionRadius=0.1;
+  m_explosionRadius=0.2;
   m_explosionTemperature=4000;
   m_explosionDivergence=3.0;
 

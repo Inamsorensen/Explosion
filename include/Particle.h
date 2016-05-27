@@ -6,6 +6,15 @@
 #include "Grid.h"
 #include "mathFunction.h"
 
+/// @brief Particle.h
+/// Single particle in simulation
+/// Contains position, velocity, temperature and burn state data
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Implementation based on the code by
+/// Christian Miller (2007). Realtime Explosion Simulation [online].
+/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
+
 enum particleStates
 {
   Unburnt,

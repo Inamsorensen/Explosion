@@ -7,6 +7,16 @@
 
 #include "Grid.h"
 
+/// @brief mathFunction.h
+/// Set of mathematical functions that can be used in other simulations as well
+/// Contains functions for RK2, trilinear interpolation, divergence of vec3, divergence of float, and a linear
+/// system solver based on Gauss-Seidel
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Implementation based on the code by
+/// Christian Miller (2007). Realtime Explosion Simulation [online].
+/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
+
 class mathFunction
 {
 public:

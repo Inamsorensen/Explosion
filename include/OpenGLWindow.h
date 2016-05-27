@@ -11,6 +11,14 @@
 
 #include "ExplosionController.h"
 
+/// @brief OpenGLWindow.h
+/// Controls the rendering of the simulation via OpenGL
+/// Creates bounding box and sets shaders for the explosion particles
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Modified from
+/// Jon Macey (2016). Simple Cube [online]
+/// [Accessed May 2016] Available from: <https://github.com/NCCA/VertexArrayObject>
 
 class OpenGLWindow : public QOpenGLWindow
 {

@@ -7,6 +7,16 @@
 
 #include "mathFunction.h"
 
+/// @brief Grid.h
+/// Grid providing a Eulerian Grid calculation of Navier-Stokes
+/// Contains fields for velocity, pressure, forces and temperature
+/// Updates values through advection, pressure projection and diffusion
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Implementation based on the code by
+/// Christian Miller (2007). Realtime Explosion Simulation [online].
+/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
+
 class Grid
 {
 public:
