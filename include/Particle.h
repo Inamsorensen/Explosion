@@ -21,7 +21,7 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Particle ctor
   //---------------------------------------------------------------------------------
-  Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _radius, float _lifeTime, float _initialTemperature, Emitter *_emitter);
+  Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _radius, float _initialTemperature, Emitter *_emitter);
 
   //---------------------------------------------------------------------------------
   /// @brief Update particle position and velocity for time step _dt
@@ -55,15 +55,6 @@ private:
   ngl::Vec3 m_position;
   ngl::Vec3 m_velocity;
 
-  ngl::Vec3 m_origin;
-  ngl::Vec3 m_initVelocity;
-
-  //---------------------------------------------------------------------------------
-  /// @brief Particle lifetime parameters
-  //---------------------------------------------------------------------------------
-  float m_lifeTime;
-  float m_currLife;
-
   //---------------------------------------------------------------------------------
   /// @brief Size and mass of particle
   //---------------------------------------------------------------------------------
@@ -74,7 +65,6 @@ private:
   /// @brief Temperature of particle
   //---------------------------------------------------------------------------------
   float m_temperature;
-  float m_initialTemperature;
 
   //---------------------------------------------------------------------------------
   /// @brief Particle state and soot accumulator
