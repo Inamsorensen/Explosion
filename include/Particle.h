@@ -6,6 +6,15 @@
 #include "Grid.h"
 #include "mathFunction.h"
 
+/// @brief Particle.h
+/// Single particle in simulation
+/// Contains position, velocity, temperature and burn state data
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Implementation based on the code by
+/// Christian Miller (2007). Realtime Explosion Simulation [online].
+/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
+
 enum particleStates
 {
   Unburnt,
@@ -21,7 +30,7 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Particle ctor
   //---------------------------------------------------------------------------------
-  Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _radius, float _lifeTime, float _initialTemperature, Emitter *_emitter);
+  Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _radius, float _initialTemperature, Emitter *_emitter);
 
   //---------------------------------------------------------------------------------
   /// @brief Update particle position and velocity for time step _dt
@@ -33,6 +42,14 @@ public:
   //---------------------------------------------------------------------------------
   void render() const;
 
+  //---------------------------------------------------------------------------------
+  /// @brief Get particle position
+  //---------------------------------------------------------------------------------
+  inline ngl::Vec3 getPosition(){return m_position;}
+
+  //---------------------------------------------------------------------------------
+  /// @brief Is particle active, if it is will be rendered
+  //---------------------------------------------------------------------------------
   bool m_active;
 
 private:
@@ -55,15 +72,6 @@ private:
   ngl::Vec3 m_position;
   ngl::Vec3 m_velocity;
 
-  ngl::Vec3 m_origin;
-  ngl::Vec3 m_initVelocity;
-
-  //---------------------------------------------------------------------------------
-  /// @brief Particle lifetime parameters
-  //---------------------------------------------------------------------------------
-  float m_lifeTime;
-  float m_currLife;
-
   //---------------------------------------------------------------------------------
   /// @brief Size and mass of particle
   //---------------------------------------------------------------------------------
@@ -74,7 +82,6 @@ private:
   /// @brief Temperature of particle
   //---------------------------------------------------------------------------------
   float m_temperature;
-  float m_initialTemperature;
 
   //---------------------------------------------------------------------------------
   /// @brief Particle state and soot accumulator

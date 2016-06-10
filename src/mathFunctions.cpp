@@ -42,34 +42,16 @@ ngl::Vec3 mathFunction::RK2_integrator(ngl::Vec3 _u, ngl::Vec3 _du, float _dt)
 
 }
 
-float mathFunction::linearInterp(std::vector<float> *_function, float _x)
-{
-  float result=0.0;
-
-  return result;
-
-}
 
 ngl::Vec3 mathFunction::trilinearInterpVec3(std::vector<ngl::Vec3> *_function, int _index0_X, int _index0_Y, int _index0_Z, int _index1_X, int _index1_Y, int _index1_Z, ngl::Vec3 _indexActual, int _noCells)
 {
   ngl::Vec3 result=ngl::Vec3(0.0,0.0,0.0);
 
-  ///Old method index1 could be smaller than index0 hence needing abs
-  /// Also gives ratio of how far inside cell over length of cell. However, not needed as indices and should hence be 1.
-  //Calculate differences to be used in the interpolation
-//  float x_diff=(_indexActual.m_x-_index0_X)/(_index1_X-_index0_X);
-//  float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
-//  float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
-//  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
-//  x_diff=std::abs(x_diff);
-//  y_diff=std::abs(y_diff);
-//  z_diff=std::abs(z_diff);
-
-  ///New method doesn't require abs, and also casts index0 as float
+  //Calculate differences to be used in interpolation
+  //Don't need to divide by anything as indices and hence index1-index0 would give 1
   float x_diff=_indexActual.m_x-(float)_index0_X;
   float y_diff=_indexActual.m_y-(float)_index0_Y;
   float z_diff=_indexActual.m_z-(float)_index0_Z;
-
 
   //Find indices to be used when finding values of the function
   int index_000=getVectorIndex(_index0_X, _index0_Y, _index0_Z, _noCells);
@@ -113,19 +95,8 @@ float mathFunction::trilinearInterpFloat(std::vector<float> *_function, int _ind
 {
   float result=0.0;
 
-///Old method
-//  //Calculate differences to be used in the interpolation
-//  float x_diff=(_indexActual.m_x-_index0_X)/(_index1_X-_index0_X);
-//  float y_diff=(_indexActual.m_y-_index0_Y)/(_index1_Y-_index0_Y);
-//  float z_diff=(_indexActual.m_z-_index0_Z)/(_index1_Z-_index0_Z);
-
-//  //Need to set difference values to positive, so 1-diff gives a ratio, ie. 1-diff<1, not 1+diff.
-//  x_diff=std::abs(x_diff);
-//  y_diff=std::abs(y_diff);
-//  z_diff=std::abs(z_diff);
-
-  ///New method
   //Calculate differences to be used in the interpolation
+  //Don't need to divide by anything as indices and hence index1-index0 would give 1
   float x_diff=_indexActual.m_x-(float)_index0_X;
   float y_diff=_indexActual.m_y-(float)_index0_Y;
   float z_diff=_indexActual.m_z-(float)_index0_Z;
@@ -171,6 +142,9 @@ float mathFunction::trilinearInterpFloat(std::vector<float> *_function, int _ind
 
 void mathFunction::linearSystemSolveFloat(std::vector<float> *result, std::vector<float> *_initField, std::vector<float> *_b, float _Aii, float _Aij, int _iterations, int _noCells, float _setMinimumValue)
 {
+  ///To do: Check for convergence
+  /// Fix issue of less than minimum values
+
   //Set up variables
   float p_ijk;
   float p_i1jk;
@@ -189,14 +163,14 @@ void mathFunction::linearSystemSolveFloat(std::vector<float> *result, std::vecto
   //Loop over iterations
   for (int iterationCount=0; iterationCount<_iterations; iterationCount++)
   {
-    //Loop over i,j,k
+    //Loop over non-boundary cells
     for (int k=1; k<(_noCells-1); k++)
     {
       for (int j=1; j<(_noCells-1); j++)
       {
         for (int i=1; i<(_noCells-1); i++)
         {
-          //Get index for this cell (i,j,k)
+          //Get index for current cell (i,j,k)
           index=getVectorIndex(i,j,k, _noCells);
 
           //Find initField of itself and 6 nearest neighbours
@@ -213,10 +187,10 @@ void mathFunction::linearSystemSolveFloat(std::vector<float> *result, std::vecto
 
           //Subtract from b to find new pressure at (i,j,k)
           newValue=(1.0/_Aii)*(_b->at(index)-sumNeighbours);
-//          newValue=(1.0/_Aii)*(sumNeighbours+p_ijk);
 
           //Set result at (i,j,k) to this new pressure value
-          ///Tried to set to minimum value if below this. Not sure if correct
+          ///Clamp to minimum value.
+          /// This should probably not be necessary, and shows a problem with the linear solver/parameters passed in
           if (newValue>=_setMinimumValue)
           {
             result->at(index)=newValue;
@@ -228,16 +202,11 @@ void mathFunction::linearSystemSolveFloat(std::vector<float> *result, std::vecto
           ///This is probably what should be used
 //          result->at(index)=newValue;
 
-//          result->at(index)=std::abs(newValue);
-
         }
-
       }
     }
 
-    //Check for convergence?
-
-    //Set values found to start for next iteration
+    //Set values found to initField so they will be used as guess for the next iteration
     _initField=result;
   }
 
@@ -245,6 +214,7 @@ void mathFunction::linearSystemSolveFloat(std::vector<float> *result, std::vecto
 
 float mathFunction::calcDivergenceVec3(std::vector<ngl::Vec3> *_field, int _index_X, int _index_Y, int _index_Z, float _cellSize, int _noCells)
 {
+
   float result;
 
   ngl::Vec3 fieldValue_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z, _noCells));
@@ -267,6 +237,7 @@ float mathFunction::calcDivergenceVec3(std::vector<ngl::Vec3> *_field, int _inde
 
 ngl::Vec3 mathFunction::calcDivergenceFloat(std::vector<float> *_field, int _index_X, int _index_Y, int _index_Z, float _cellSize, int _noCells)
 {
+
   ngl::Vec3 result;
 
   float fieldValue_i1jk=_field->at(getVectorIndex((_index_X+1), _index_Y, _index_Z, _noCells));
@@ -337,6 +308,7 @@ void mathFunction::calculateCurl(std::vector<ngl::Vec3> *_field, std::vector<ngl
         resultCurl.m_y=(dfxdz-dfzdx);
         resultCurl.m_z=(dfydx-dfxdy);
 
+        //Set curl value to field
         curlField->at(getVectorIndex(i,j,k, _noCells))=resultCurl;
 
         //Calculate magnitude of curl

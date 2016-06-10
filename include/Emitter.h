@@ -9,6 +9,19 @@
 #include <ngl/Camera.h>
 
 #include "Particle.h"
+#include "AlembicExport.h"
+
+/// @brief Emitter.h
+/// Emitter for particle system
+/// Sets up position and initial values for particles and contains most particle parameters
+/// Controls update and rendering of particles
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Implementation based on the code by
+/// Christian Miller (2007). Realtime Explosion Simulation [online].
+/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
+/// Jon Macey (2015). Simple Particles [online]
+/// [Accessed May 2016] Available from: <https://github.com/NCCA/ParticleSystem>
 
 class Emitter
 {
@@ -16,7 +29,7 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Emitter ctor
   //---------------------------------------------------------------------------------
-  Emitter(ngl::Vec3 _position, float _radius, int _noParticles, int _emissionRate);
+  Emitter(ngl::Vec3 _position, float _radius, int _noParticles);
 
   //---------------------------------------------------------------------------------
   /// @brief Emitter dtor
@@ -27,7 +40,7 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Particle setup
   //---------------------------------------------------------------------------------
-  void setUpParticles(float _particleMass, ngl::Vec3 _initialParticleVelocity, float _particleLifeTime, float _particleRadius, float _particleDragConstant, float _particleInitialTemperature);
+  void setUpParticles(float _particleMass, float _massRandomisation, ngl::Vec3 _initialParticleVelocity, float _particleRadius, float _particleDragConstant, float _particleInitialTemperature);
 
   //---------------------------------------------------------------------------------
   /// @brief Update particles from emitter after time step _dt
@@ -37,7 +50,7 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Render particles from emitter
   //---------------------------------------------------------------------------------
-  void renderParticles(ngl::Mat4 _ModelMatrix_Camera);
+  void renderParticles(ngl::Mat4 _ModelMatrix_Camera, bool _exportAlembic);
 
 
   //---------------------------------------------------------------------------------
@@ -53,14 +66,13 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Set and call parameters for burning of particles
   //---------------------------------------------------------------------------------
-  void setParticleBurningParameters(float _burnThreshold, float _burnRate, float _thermalConductivity, float _thermalMass, float _heatRelease, float _volumeRelease, float _sootCreationConstant, float _sootThreshold);
+  void setParticleBurningParameters(float _burnThreshold, float _burnRate, float _thermalConductivity, float _thermalMass, float _heatRelease, float _volumeRelease, float _sootThreshold);
   inline float getBurnThreshold() const {return m_burnThreshold;}
   inline float getBurnRate() const {return m_burnRate;}
   inline float getThermalConductivity() const {return m_thermalConductivity;}
   inline float getThermalMass() const {return m_thermalMass;}
   inline float getHeatRelease() const {return m_heatRelease;}
   inline float getVolumeRelease() const {return m_volumeRelease;}
-  inline float getSootCreation() const {return m_sootCreation;}
   inline float getSootThreshold() const {return m_sootThreshold;}
 
 
@@ -79,10 +91,6 @@ private:
   /// @brief Number of particles total
   //---------------------------------------------------------------------------------
   int m_noParticles;
-  //---------------------------------------------------------------------------------
-  /// @brief Number of particles emitted each time step
-  //---------------------------------------------------------------------------------
-  int m_emissionRate;
 
   //---------------------------------------------------------------------------------
   /// @brief Particle mass
@@ -96,10 +104,6 @@ private:
   /// @brief Particle initial velocity
   //---------------------------------------------------------------------------------
   ngl::Vec3 m_particleInitVelocity;
-  //---------------------------------------------------------------------------------
-  /// @brief Particle average lifetime
-  //---------------------------------------------------------------------------------
-  float m_particleLifeTime;
   //---------------------------------------------------------------------------------
   /// @brief Particle drag coefficient. Used to calculate drag force
   //---------------------------------------------------------------------------------
@@ -133,11 +137,7 @@ private:
   //----------------------------------------------------------------------------------------------------------------------
   float m_volumeRelease;
   //----------------------------------------------------------------------------------------------------------------------
-  /// @brief Mass of soot produced per unit combusted mass of fuel
-  //----------------------------------------------------------------------------------------------------------------------
-  float m_sootCreation;
-  //----------------------------------------------------------------------------------------------------------------------
-  /// @brief Threshold above which fuel particle turns to soot
+  /// @brief Mass threshold below which a fuel particle turns to soot
   //----------------------------------------------------------------------------------------------------------------------
   float m_sootThreshold;
 
@@ -160,6 +160,10 @@ private:
   /// @brief Name of particle shader
   //---------------------------------------------------------------------------------
   std::string m_shaderName;
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief Alembic exporter
+  //----------------------------------------------------------------------------------------------------------------------
+  AlembicExport* m_alembicExporter;
 };
 
 #endif //EMITTER

@@ -8,22 +8,16 @@
 #include <ngl/Mat4.h>
 #include <ngl/Mat3.h>
 
-Particle::Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _radius, float _lifeTime, float _initialTemperature, Emitter* _emitter)
+Particle::Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float _radius, float _initialTemperature, Emitter* _emitter)
 {
   m_position=_position;
   m_velocity=_velocity;
 
-  m_origin=_position;
-  m_initVelocity=_velocity;
-
-  m_lifeTime=_lifeTime;
-  m_currLife=0.0;
-  m_active=0;
+  m_active=true;
 
   m_mass=_mass;
   m_radius=_radius;
 
-  m_initialTemperature=_initialTemperature;
   m_temperature=_initialTemperature;
 
   m_burnState=Unburnt;
@@ -35,9 +29,6 @@ Particle::Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float 
   Grid* grid=Grid::getGrid();
   ngl::Vec3 gridOrigin=grid->getPosition();
   float gridSize=grid->getGridSize();
-
-  //Make sure particles cannot move into the outer cells in the grid.
-  ///Could optionally not let the trilinear interpolation sample from cells that do not exist.
   m_xMin=gridOrigin.m_x;
   m_yMin=gridOrigin.m_y;
   m_zMin=gridOrigin.m_z;
@@ -49,67 +40,61 @@ Particle::Particle(ngl::Vec3 _position, ngl::Vec3 _velocity, float _mass, float 
 
 void Particle::update(float _dt)
 {
-  ///To do: When reset particle, should temperature be initTemp or current temp in field at init position?
 
-  m_currLife+=_dt;
+//Stop updating and rendering particle when reaches outside bounding box
 
+  if (m_position.m_x<m_xMin || m_position.m_x>m_xMax || m_position.m_y<m_yMin || m_position.m_y>m_yMax || m_position.m_z<m_zMin || m_position.m_z>m_zMax)
+  {
+    m_active=false;
 
-//Reset particle when reaches outside bounding box
+  }
+  else
+  {
 
-//  if (m_currLife>m_lifeTime || m_position.m_x<m_xMin || m_position.m_x>m_xMax || m_position.m_y<m_yMin || m_position.m_y>m_yMax || m_position.m_z<m_zMin || m_position.m_z>m_zMax)
-//  {
-//    m_position=m_origin;
-//    m_velocity=m_initVelocity;
-//    m_currLife=0.0;
-//    m_active=0;
-//    m_temperature=m_initialTemperature;
-
-//  }
-//  else
-//  {
-//    ///To do: Should velocity be updated before or after position
-//    ///       Velocity should probably be drag force, not direct velocity
-//    ///       Update temperature
-
-//    //Update position and temperature
-//    updatePosition(_dt);
-//    updateTemperature(_dt);
-//    burnParticle(_dt);
-//  }
-
-  updatePosition(_dt);
-  updateTemperature(_dt);
-  burnParticle(_dt);
+    //Update position and temperature, and burn particle
+    updatePosition(_dt);
+    updateTemperature(_dt);
+    burnParticle(_dt);
+  }
 
 }
 
 void Particle::updatePosition(float _dt)
 {
-  //Calculate drag force
-
   Grid* grid=Grid::getGrid();
-  //Find velocity of grid at particle position
+
+    //Find velocity of grid at particle position
   ngl::Vec3 velocityFromField=grid->getVelocityFromField(m_position);
 
-//    std::cout<<"Position: ["<<m_position.m_x<<" "<<m_position.m_y<<" "<<m_position.m_z<<"] Velocity: ["<<velocityFromField.m_x<<" "<<velocityFromField.m_y<<" "<<velocityFromField.m_z<<"]\n";
+  //Only use drag force on fuel particles, not on soot
+  if (m_burnState!=Soot)
+  {
+    ngl::Vec3 velocityDifference=velocityFromField-m_velocity;
 
-  ngl::Vec3 velocityDifference=velocityFromField-m_velocity;
-//    ngl::Vec3 velocityDiffSquared=velocityDifference.dot(velocityDifference);
+    float dragArea=pow(m_radius,2);
+    float density=1.0/m_mass;
 
-  float dragArea=pow(m_radius,2);
-  float density=1/m_mass;
+    ngl::Vec3 dragForce=(m_emitter->getDragConstant()*density*dragArea)*velocityDifference*(velocityDifference.length());
+//    ngl::Vec3 dragForce=(m_emitter->getDragConstant()*density*dragArea)*velocityDifference;
 
-  ngl::Vec3 dragForce=(m_emitter->getDragConstant()*density*dragArea)*velocityDifference;
-
-
-  //Calculate new velocity using gravity and dragForce
-  ngl::Vec3 gravity=ngl::Vec3(0.0,-9.81,0.0);
-//  m_velocity+=_dt*gravity;
-  m_velocity+=_dt*dragForce;
+    //If statement inserted to make sure the particles don't speed up a lot when mass decreases
+    if (std::abs(dragForce.m_x)<std::abs(velocityDifference.m_x) && std::abs(dragForce.m_y)<std::abs(velocityDifference.m_y) && std::abs(dragForce.m_z)<std::abs(velocityDifference.m_z))
+    {
+      m_velocity+=_dt*dragForce;
+    }
+    else
+    {
+      m_velocity=velocityFromField;
+    }
+  }
+  else
+  {
+    m_velocity=velocityFromField;
+  }
 
   //Calculate new position
   m_position+=_dt*m_velocity;
-//    m_position+=_dt*velocityFromField;
+
 }
 
 void Particle::updateTemperature(float _dt)
@@ -123,12 +108,11 @@ void Particle::updateTemperature(float _dt)
 
   //Calculate new temperature
   m_temperature+=_dt*tempChange;
-//  m_temperature=gridTemp;
 }
 
 void Particle::burnParticle(float _dt)
 {
-  //Check if unburnt
+  //If unburnt, check temperature to see if ignited
   if (m_burnState==Unburnt)
   {
     if (m_temperature>=m_emitter->getBurnThreshold())
@@ -147,9 +131,9 @@ void Particle::burnParticle(float _dt)
     int index0_X;
     int index0_Y;
     int index0_Z;
-    index0_X=trunc(indexParticle.m_x);
-    index0_Y=trunc(indexParticle.m_y);
-    index0_Z=trunc(indexParticle.m_z);
+    index0_X=floor(indexParticle.m_x);
+    index0_Y=floor(indexParticle.m_y);
+    index0_Z=floor(indexParticle.m_z);
     int gridIndex=grid->getVectorIndex(index0_X, index0_Y, index0_Z);
 
     //Add temperature contribution
@@ -160,15 +144,15 @@ void Particle::burnParticle(float _dt)
     float divergenceContribution=_dt*m_emitter->getVolumeRelease()*burnRate;
     grid->addDivergenceFromParticle(gridIndex, divergenceContribution);
 
-    //Burn off mass and accumulate soot
+    //Burn off mass
     m_mass-=_dt*m_emitter->getBurnRate();
-    m_sootAccumulator+=_dt*m_emitter->getSootCreation()*burnRate;
 
-    //Change to soot if soot accumulation is above threshold
-    if (m_sootAccumulator>=m_emitter->getSootThreshold())
+    //Change to soot if remaining mass is above threshold
+    if (m_mass<m_emitter->getSootThreshold())
     {
       m_burnState=Soot;
     }
+
   }
 
 
@@ -179,16 +163,29 @@ void Particle::render() const
   //Get instance so can draw sphere
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
 
-  //Set up shader with shader name from emitter
+  //Set shader depending on burn state
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-  shader->use(m_emitter->getShaderName());
+
+  if (m_burnState==Soot)
+  {
+    shader->use("PhongSilver");
+  }
+  else if (m_burnState==Unburnt)
+  {
+    shader->use("PhongCopper");
+  }
+  else
+  {
+    shader->use(m_emitter->getShaderName());
+  }
+
 
   //Calculate rotated positions - in case camera is rotated
   ngl::Vec4 position;
   position.m_x=m_position.m_x;
   position.m_y=m_position.m_y;
   position.m_z=m_position.m_z;
-  position.m_w=1;
+  position.m_w=1.0;
   ngl::Vec4 rotatedPosition=position*m_emitter->getModelMatrixCamera();
 
   //Set MVP matrix

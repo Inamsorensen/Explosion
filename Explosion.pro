@@ -5,6 +5,23 @@ OBJECTS_DIR=obj
 # core Qt Libs to use add more here if needed.
 QT+=gui opengl core
 
+# Import libraries for alembic export
+INCLUDEPATH+=/usr/local/include/OpenEXR
+linux*:INCLUDEPATH+= /usr/local/alembic-1.5.8/include/
+linux*:LIBS+=-L/usr/local/alembic-1.5.8/lib/static
+
+
+linux*:LIBS+= -lAbcWFObjConvert         -lAlembicAbcCoreOgawa \
+-lAlembicAbc              -lAlembicAbcGeom \
+-lAlembicAbcCollection   -lAlembicAbcMaterial \
+-lAlembicAbcCoreAbstract  -lAlembicAbcOpenGL \
+-lAlembicAbcCoreFactory   -lAlembicOgawa \
+-lAlembicAbcCoreHDF5      -lAlembicUtil
+
+linux*:LIBS+=-L/usr/local/lib -lHalf
+
+macx:LIBS+=-lAlembic
+
 # as I want to support 4.8 and 5 this will set a flag for some of the mac stuff
 # mainly in the types.h file for the setMacVisual which is native in Qt5
 isEqual(QT_MAJOR_VERSION, 5) {
@@ -22,7 +39,8 @@ SOURCES+= $$PWD/src/main.cpp \
           src/Emitter.cpp \
           src/OpenGLWindow.cpp \
           src/mathFunctions.cpp \
-    src/ExplosionController.cpp
+    src/ExplosionController.cpp \
+    src/AlembicExport.cpp
 
 # same for the .h files
 HEADERS+=   $$PWD/include/OpenGLWindow.h \
@@ -30,7 +48,8 @@ HEADERS+=   $$PWD/include/OpenGLWindow.h \
             include/Emitter.h \
             include/Grid.h \
     include/mathFunction.h \
-    include/ExplosionController.h
+    include/ExplosionController.h \
+    include/AlembicExport.h
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

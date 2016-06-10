@@ -29,9 +29,6 @@ OpenGLWindow::OpenGLWindow()
 
   setTitle("Explosion");
 
-//  m_simElapsedTime=0.0;
-//  m_noFrames=0;
-
 }
 
 
@@ -79,7 +76,7 @@ void OpenGLWindow::initializeGL()
   m_camera.setShape(60,(float)720.0/576.0,0.5,150);
 
   //Shader setup
-  //Setup Phong shader
+  //Setup Phong Gold shader - Used for burning particles
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   shader->createShaderProgram("Phong");
   shader->attachShader("PhongVertex",ngl::ShaderType::VERTEX);
@@ -97,7 +94,6 @@ void OpenGLWindow::initializeGL()
   (*shader)["Phong"]->use();
   shader->setShaderParam1i("Normalize",1);
 
-  // now pass the modelView and projection values to the shader
   // the shader will use the currently active material and light0 so set them
   ngl::Material m(ngl::STDMAT::GOLD);
   m.loadToShader("material");
@@ -113,7 +109,53 @@ void OpenGLWindow::initializeGL()
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
   prim->createSphere("sphere", 0.1,10);
 
-  //Setup colour shader
+  //Setup Phong Silver shader - Used for soot
+  shader->createShaderProgram("PhongSilver");
+  shader->attachShader("PhongVertex",ngl::ShaderType::VERTEX);
+  shader->attachShader("PhongFragment",ngl::ShaderType::FRAGMENT);
+  shader->loadShaderSource("PhongVertex","shaders/Phong.vs");
+  shader->loadShaderSource("PhongFragment","shaders/Phong.fs");
+  shader->compileShader("PhongVertex");
+  shader->compileShader("PhongFragment");
+  shader->attachShaderToProgram("PhongSilver","PhongVertex");
+  shader->attachShaderToProgram("PhongSilver","PhongFragment");
+  shader->bindAttribute("PhongSilver",0,"inVert");
+  shader->bindAttribute("PhongSilver",1,"inUV");
+  shader->bindAttribute("PhongSilver",2,"inNormal");
+  shader->linkProgramObject("PhongSilver");
+  (*shader)["PhongSilver"]->use();
+  shader->setShaderParam1i("Normalize",1);
+
+  // the shader will use the currently active material and light0 so set them
+  ngl::Material mSilver(ngl::STDMAT::SILVER);
+  mSilver.loadToShader("material");
+  //Attach light
+  light.loadToShader("light");
+
+  //Setup Phong Copper shader - Used for unignited particles
+  shader->createShaderProgram("PhongCopper");
+  shader->attachShader("PhongVertex",ngl::ShaderType::VERTEX);
+  shader->attachShader("PhongFragment",ngl::ShaderType::FRAGMENT);
+  shader->loadShaderSource("PhongVertex","shaders/Phong.vs");
+  shader->loadShaderSource("PhongFragment","shaders/Phong.fs");
+  shader->compileShader("PhongVertex");
+  shader->compileShader("PhongFragment");
+  shader->attachShaderToProgram("PhongCopper","PhongVertex");
+  shader->attachShaderToProgram("PhongCopper","PhongFragment");
+  shader->bindAttribute("PhongCopper",0,"inVert");
+  shader->bindAttribute("PhongCopper",1,"inUV");
+  shader->bindAttribute("PhongCopper",2,"inNormal");
+  shader->linkProgramObject("PhongCopper");
+  (*shader)["PhongCopper"]->use();
+  shader->setShaderParam1i("Normalize",1);
+
+  // the shader will use the currently active material and light0 so set them
+  ngl::Material mCopper(ngl::STDMAT::COPPER);
+  mCopper.loadToShader("material");
+  //Attach light
+  light.loadToShader("light");
+
+  //Setup colour shader - Used to draw bounding box
   shader->createShaderProgram("Colour");
   shader->attachShader("ColourVertex", ngl::ShaderType::VERTEX);
   shader->attachShader("ColourFragment", ngl::ShaderType::FRAGMENT);
@@ -129,7 +171,6 @@ void OpenGLWindow::initializeGL()
   shader->linkProgramObject("Colour");
   (*shader)["Colour"]->use();
   shader->setShaderParam1i("Normalize",1);
-
 
 
   //Setup simulation
@@ -151,54 +192,6 @@ void OpenGLWindow::initializeGL()
 
 }
 
-void OpenGLWindow::simulationSetup()
-{
-//  //Time step setup
-//  m_simTimeStep=0.01;
-
-
-//  //Grid setup
-//  m_gridPosition=ngl::Vec3(-2.5,-2.5,-2.5);
-//  m_gridSize=5.0;
-//  m_noCells=16;
-
-//  float noise=0.2;
-//  float vorticityConstant=4.0;
-
-//  Grid* grid=Grid::createGrid(m_gridPosition,m_gridSize,m_noCells, noise, vorticityConstant);
-
-
-
-
-//  //Particle setup
-//  float particleMass=0.1;
-//  float particleRadius=0.1;
-//  ngl::Vec3 initialVelocity=ngl::Vec3(0.0,0.0,0.0);
-//  float particleLifeTime=10;
-//  float particleDrag=1;
-//  float particleInitialTemperature=293.0;
-
-
-//  //Emitter setup
-//  m_emitterPosition=ngl::Vec3(0.0,0.0,0.0);
-//  m_emitterRadius=0.3;
-//  m_noParticles=2000;
-////  m_noParticles=1;
-//  m_emissionRate=10;
-
-//  m_emitter=new Emitter(m_emitterPosition,m_emitterRadius,m_noParticles,m_emissionRate);
-//  m_emitter->setUpParticles(particleMass, initialVelocity, particleLifeTime, particleRadius, particleDrag, particleInitialTemperature);
-
-
-//  //Explosion setup
-//  float explosionTemp=10000;
-//  float addDiv=0.01;
-//  ngl::Vec3 explosionPos=ngl::Vec3(0.0,0.0,0.0);
-//  float explosionRadius=1.0;
-
-//  grid->setExplosion(explosionPos, explosionRadius, explosionTemp, addDiv);
-
-}
 
 void OpenGLWindow::buildVAO()
 {
@@ -223,6 +216,7 @@ void OpenGLWindow::buildVAO()
                          1,0,1,
                          0,0,1
                         };
+
 //Colour of each vertex
    GLfloat colours[] = {1,0,0,
                         1,0,0,
@@ -279,12 +273,11 @@ void OpenGLWindow::paintGL()
   ModelMatrix_BBox.setScale(gridSize,gridSize,gridSize);
 
 
-  //MVP calculated from multiplying ModelMatrix_BBox with ModelMatrix_Camera?
+  //MVP calculated from multiplying ModelMatrix_BBox with ModelMatrix_Camera
   ngl::Mat4 ModelMatrix;
   ModelMatrix=ModelMatrix_BBox.getMatrix()*ModelMatrix_Camera;
 
   MVP=ModelMatrix*m_camera.getVPMatrix();
-//  MVP=ModelMatrix_Camera*m_camera.getVPMatrix();
   shader->setShaderParamFromMat4("MVP",MVP);
 
   m_vao->bind();
@@ -293,11 +286,8 @@ void OpenGLWindow::paintGL()
 
 
   //Draw particles
-//  m_emitter->renderParticles(ModelMatrix_Camera);
   m_explosionController->render(ModelMatrix_Camera);
 
-//  //Increase frame count
-//  m_noFrames+=1;
  }
 
 
@@ -401,51 +391,16 @@ void OpenGLWindow::keyPressEvent(QKeyEvent *_event)
   {
   // escape key to quite
   case Qt::Key_Escape : QGuiApplication::exit(EXIT_SUCCESS); break;
-  // turn on wirframe rendering
-  case Qt::Key_W : glPolygonMode(GL_FRONT_AND_BACK,GL_LINE); break;
-  // turn off wire frame
-  case Qt::Key_S : glPolygonMode(GL_FRONT_AND_BACK,GL_FILL); break;
-  // show full screen
   case Qt::Key_F : showFullScreen(); break;
-  // show windowed
-  case Qt::Key_N : showNormal(); break;
-   // update particle:
-  case Qt::Key_U :
-  {
-//    //Update grid
-//    Grid* grid=Grid::getGrid();
-//    grid->update(m_simTimeStep);
-
-//    //Update particles
-//    m_emitter->update(m_simTimeStep);
-
-//    //Increase elapsed time
-//    m_simElapsedTime+=m_simTimeStep;
-
-    m_explosionController->update();
-
-    //Render new frame
-    update();
-
-    break;
-  }
+  case Qt::Key_E : m_explosionController->toggleAlembicExport(); break;
   default : break;
   }
-  update();
+//  update();
 }
 
 void OpenGLWindow::timerEvent(QTimerEvent *_event )
 {
-//  //Update grid
-//  Grid* grid=Grid::getGrid();
-//  grid->update(m_simTimeStep);
-
-//  //Update particles
-//  m_emitter->update(m_simTimeStep);
-
-//  //Increase elapsed time
-//  m_simElapsedTime+=m_simTimeStep;
-
+  //Update explosion calculation
   m_explosionController->update();
 
   //Render new frame
