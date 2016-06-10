@@ -23,6 +23,18 @@
 /// Jon Macey (2015). Simple Particles [online]
 /// [Accessed May 2016] Available from: <https://github.com/NCCA/ParticleSystem>
 
+/// @brief Emitter.h
+/// Emitter for particle system
+/// Sets up position and initial values for particles and contains most particle parameters
+/// Controls update and rendering of particles
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Implementation based on the code by
+/// Christian Miller (2007). Realtime Explosion Simulation [online].
+/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
+/// Jon Macey (2015). Simple Particles [online]
+/// [Accessed May 2016] Available from: <https://github.com/NCCA/ParticleSystem>
+
 class Emitter
 {
 public:

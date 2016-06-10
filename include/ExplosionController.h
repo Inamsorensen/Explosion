@@ -14,6 +14,15 @@
 /// Christian Miller (2007). Realtime Explosion Simulation [online].
 /// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
 
+/// @brief ExplosionController.h
+/// Control center for the explosion simulation
+/// Contains all user-defineable simulation parameters
+/// Author: Ina M. Sorensen
+/// Date: 27.05.16
+/// Implementation based on the code by
+/// Christian Miller (2007). Realtime Explosion Simulation [online].
+/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
+
 class ExplosionController
 {
 public:

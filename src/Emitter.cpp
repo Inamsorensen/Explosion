@@ -14,6 +14,7 @@ Emitter::Emitter(ngl::Vec3 _position, float _radius, int _noParticles)
   m_alembicExporter=new AlembicExport();
 
 
+
 }
 
 Emitter::~Emitter()
@@ -105,10 +106,10 @@ void Emitter::renderParticles(ngl::Mat4 _ModelMatrix_Camera, bool _exportAlembic
 
     m_alembicExporter->exportFrame(&particlePositions, m_noParticles);
   }
-//  else
-//  {
-//    std::cout<<"Alembic export stopped\n";
-//  }
+  else
+  {
+    std::cout<<"Alembic export stopped\n";
+  }
 
 }
 
