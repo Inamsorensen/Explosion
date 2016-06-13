@@ -20,7 +20,7 @@ ExplosionController::ExplosionController()
 //  m_noCells=32;
 
   m_noiseConstant=0.2;
-  m_vorticityConstant=4.0;
+  m_vorticityConstant=10.0;
 
   m_ambientTemp=293.0; //20C=293K
   m_thermalConductivity=0.01;
@@ -70,6 +70,20 @@ ExplosionController::ExplosionController()
 
   m_emitter->setParticleBurningParameters(m_particleBurnThreshold, m_particleBurnRate, m_particleThermalConductivity, m_particleThermalMass, m_particleHeatRelease, m_particleVolumeRelease, m_particleSootThreshold);
 
+}
+
+ExplosionController::~ExplosionController()
+{
+  if (m_emitter!=nullptr)
+  {
+    std::cout<<"Removing emitter\n";
+    delete m_emitter;
+  }
+  if (m_grid!=nullptr)
+  {
+    std::cout<<"Remove grid\n";
+    delete m_grid;
+  }
 }
 
 ExplosionController* ExplosionController::instance()

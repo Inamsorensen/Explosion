@@ -3,7 +3,7 @@
 
 #include "Emitter.h"
 #include "Grid.h"
-#include "AlembicExport.h"
+//#include "AlembicExport.h"
 
 /// @brief ExplosionController.h
 /// Control center for the explosion simulation
@@ -30,6 +30,10 @@ public:
   /// @brief Get explosion controller instance
   //----------------------------------------------------------------------------------------------------------------------
   static ExplosionController* instance();
+  //----------------------------------------------------------------------------------------------------------------------
+  /// @brief dtor
+  //----------------------------------------------------------------------------------------------------------------------
+  ~ExplosionController();
 
   //----------------------------------------------------------------------------------------------------------------------
   /// @brief Update explosion

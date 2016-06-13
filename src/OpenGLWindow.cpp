@@ -34,6 +34,11 @@ OpenGLWindow::OpenGLWindow()
 
 OpenGLWindow::~OpenGLWindow()
 {
+  if (m_explosionController!=nullptr)
+  {
+//    m_explosionController->~ExplosionController();
+    delete m_explosionController;
+  }
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
 
@@ -392,10 +397,7 @@ void OpenGLWindow::keyPressEvent(QKeyEvent *_event)
   // escape key to quite
   case Qt::Key_Escape : QGuiApplication::exit(EXIT_SUCCESS); break;
   case Qt::Key_F : showFullScreen(); break;
-<<<<<<< HEAD
   case Qt::Key_E : m_explosionController->toggleAlembicExport(); break;
-=======
->>>>>>> c7549a6aea6ec12dfd3bd738220a488bb2ba7013
   default : break;
   }
 //  update();

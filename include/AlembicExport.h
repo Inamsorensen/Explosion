@@ -1,7 +1,6 @@
 #ifndef ALEMBICEXPORT
 #define ALEMBICEXPORT
 
-
 #include <Alembic/AbcGeom/All.h>
 #include <Alembic/AbcCoreOgawa/All.h>
 
@@ -21,7 +20,7 @@ public:
   //---------------------------------------------------------------------------------
   /// @brief Write frame to alembic
   //---------------------------------------------------------------------------------
-  void exportFrame(std::vector<ngl::Vec3> *_particlePositions, int _noParticles);
+  void exportFrame(std::vector<ngl::Vec3> *_particlePositions, std::vector<float> *_particleTemperatures, int _noParticles);
 
 private:
   //---------------------------------------------------------------------------------
@@ -32,10 +31,10 @@ private:
   /// @brief Point samples given by simulation
   //---------------------------------------------------------------------------------
   std::unique_ptr <Alembic::AbcGeom::OPoints> m_pointSamples;
-//  //---------------------------------------------------------------------------------
-//  /// @brief Array of temperatures for each point
-//  //---------------------------------------------------------------------------------
-//  std::unique_ptr <Alembic::AbcGeom::ODoubleArrayProperty> m_temperatures;
+  //---------------------------------------------------------------------------------
+  /// @brief Array of temperatures for each point
+  //---------------------------------------------------------------------------------
+  std::unique_ptr <Alembic::AbcGeom::OFloatArrayProperty> m_temperatures;
 };
 
 #endif // ALEMBICEXPORT

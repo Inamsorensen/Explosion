@@ -6,7 +6,6 @@ OBJECTS_DIR=obj
 QT+=gui opengl core
 
 # Import libraries for alembic export
-INCLUDEPATH+=/usr/local/include/OpenEXR
 linux*:INCLUDEPATH+= /usr/local/alembic-1.5.8/include/
 linux*:LIBS+=-L/usr/local/alembic-1.5.8/lib/static
 
@@ -16,7 +15,7 @@ linux*:LIBS+= -lAbcWFObjConvert         -lAlembicAbcCoreOgawa \
 -lAlembicAbcCollection   -lAlembicAbcMaterial \
 -lAlembicAbcCoreAbstract  -lAlembicAbcOpenGL \
 -lAlembicAbcCoreFactory   -lAlembicOgawa \
--lAlembicAbcCoreHDF5      -lAlembicUtil
+-lAlembicAbcCoreHDF5      -lAlembicUtil \
 
 linux*:LIBS+=-L/usr/local/lib -lHalf
 
@@ -53,13 +52,14 @@ HEADERS+=   $$PWD/include/OpenGLWindow.h \
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
+INCLUDEPATH+=/usr/local/include/OpenEXR
 
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files
 OTHER_FILES+= shaders/*.glsl \
               shaders/*.vs \
-              shaders/*.fs
+              shaders/*.fs \
                                                         README.md
 # were are going to default to a console app
 CONFIG += console

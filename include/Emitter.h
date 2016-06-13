@@ -8,6 +8,9 @@
 
 #include <ngl/Camera.h>
 
+//#include <Alembic/AbcGeom/All.h>
+//#include <Alembic/AbcCoreOgawa/All.h>
+
 #include "Particle.h"
 #include "AlembicExport.h"
 
@@ -23,17 +26,6 @@
 /// Jon Macey (2015). Simple Particles [online]
 /// [Accessed May 2016] Available from: <https://github.com/NCCA/ParticleSystem>
 
-/// @brief Emitter.h
-/// Emitter for particle system
-/// Sets up position and initial values for particles and contains most particle parameters
-/// Controls update and rendering of particles
-/// Author: Ina M. Sorensen
-/// Date: 27.05.16
-/// Implementation based on the code by
-/// Christian Miller (2007). Realtime Explosion Simulation [online].
-/// [Accessed May 2016]. Available from: <http://www.cs.utexas.edu/~ckm/explosion/>.
-/// Jon Macey (2015). Simple Particles [online]
-/// [Accessed May 2016] Available from: <https://github.com/NCCA/ParticleSystem>
 
 class Emitter
 {
@@ -63,7 +55,6 @@ public:
   /// @brief Render particles from emitter
   //---------------------------------------------------------------------------------
   void renderParticles(ngl::Mat4 _ModelMatrix_Camera, bool _exportAlembic);
-
 
   //---------------------------------------------------------------------------------
   /// @brief Set and call parameters for rendering of particles
@@ -175,7 +166,12 @@ private:
   //----------------------------------------------------------------------------------------------------------------------
   /// @brief Alembic exporter
   //----------------------------------------------------------------------------------------------------------------------
-  AlembicExport* m_alembicExporter;
+//  AlembicExport* m_alembicExporter;
+  std::unique_ptr <AlembicExport> m_alembicExporter;
+//  Alembic::AbcGeom::OArchive* m_alembicArchive;
+//  Alembic::AbcGeom::OPoints* m_alembicPoints;
+//  std::unique_ptr<Alembic::AbcGeom::OArchive> m_alembicArchive;
+//  std::unique_ptr<Alembic::AbcGeom::OPoints> m_alembicPoints;
 };
 
 #endif //EMITTER

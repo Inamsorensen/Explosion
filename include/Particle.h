@@ -46,6 +46,10 @@ public:
   /// @brief Get particle position
   //---------------------------------------------------------------------------------
   inline ngl::Vec3 getPosition(){return m_position;}
+  //---------------------------------------------------------------------------------
+  /// @brief Get particle temperature
+  //---------------------------------------------------------------------------------
+  inline float getTemperature(){return m_temperature;}
 
   //---------------------------------------------------------------------------------
   /// @brief Is particle active, if it is will be rendered

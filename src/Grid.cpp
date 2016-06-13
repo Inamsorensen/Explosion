@@ -42,6 +42,11 @@ Grid::Grid(ngl::Vec3 _origin, float _gridSize, int _noCells)
 
 }
 
+Grid::~Grid()
+{
+  ///To do: Remove instance
+}
+
 
 Grid* Grid::createGrid(ngl::Vec3 _origin, float _gridSize, int _noCells)
 {

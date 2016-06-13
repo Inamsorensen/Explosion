@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT5BUILD -DQT5BUILD -DNGL_DEBUG -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -msse -msse2 -msse3 -march=native -march=native -O2 -std=c++0x -Wall -W -Wno-unused-parameter -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I/usr/local/include/OpenEXR -I/usr/local/alembic-1.5.8/include -Iinclude -I/home/i7435906/NGL/include -I/opt/qt/5.5/gcc_64/include -I/opt/qt/5.5/gcc_64/include/QtOpenGL -I/opt/qt/5.5/gcc_64/include/QtWidgets -I/opt/qt/5.5/gcc_64/include/QtGui -I/opt/qt/5.5/gcc_64/include/QtCore -Imoc -I/opt/qt/5.5/gcc_64/mkspecs/linux-g++
+INCPATH       = -I. -I/usr/local/alembic-1.5.8/include -Iinclude -I/usr/local/include/OpenEXR -I/home/i7435906/NGL/include -I/opt/qt/5.5/gcc_64/include -I/opt/qt/5.5/gcc_64/include/QtOpenGL -I/opt/qt/5.5/gcc_64/include/QtWidgets -I/opt/qt/5.5/gcc_64/include/QtGui -I/opt/qt/5.5/gcc_64/include/QtCore -Imoc -I/opt/qt/5.5/gcc_64/mkspecs/linux-g++
 QMAKE         = /opt/qt/5.5/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -713,7 +713,7 @@ moc/moc_OpenGLWindow.cpp: /home/i7435906/NGL/include/ngl/Camera.h \
 		/usr/local/alembic-1.5.8/include/Alembic/AbcCoreOgawa/All.h \
 		/usr/local/alembic-1.5.8/include/Alembic/AbcCoreOgawa/ReadWrite.h \
 		include/OpenGLWindow.h
-	/opt/qt/5.5/gcc_64/bin/moc $(DEFINES) -I/opt/qt/5.5/gcc_64/mkspecs/linux-g++ -I/home/i7435906/RenderSim/Simulation/Assignment/Explosion -I/usr/local/include/OpenEXR -I/usr/local/alembic-1.5.8/include -I/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include -I/home/i7435906/NGL/include -I/opt/qt/5.5/gcc_64/include -I/opt/qt/5.5/gcc_64/include/QtOpenGL -I/opt/qt/5.5/gcc_64/include/QtWidgets -I/opt/qt/5.5/gcc_64/include/QtGui -I/opt/qt/5.5/gcc_64/include/QtCore include/OpenGLWindow.h -o moc/moc_OpenGLWindow.cpp
+	/opt/qt/5.5/gcc_64/bin/moc $(DEFINES) -I/opt/qt/5.5/gcc_64/mkspecs/linux-g++ -I/home/i7435906/RenderSim/Simulation/Assignment/Explosion -I/usr/local/alembic-1.5.8/include -I/home/i7435906/RenderSim/Simulation/Assignment/Explosion/include -I/usr/local/include/OpenEXR -I/home/i7435906/NGL/include -I/opt/qt/5.5/gcc_64/include -I/opt/qt/5.5/gcc_64/include/QtOpenGL -I/opt/qt/5.5/gcc_64/include/QtWidgets -I/opt/qt/5.5/gcc_64/include/QtGui -I/opt/qt/5.5/gcc_64/include/QtCore include/OpenGLWindow.h -o moc/moc_OpenGLWindow.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
